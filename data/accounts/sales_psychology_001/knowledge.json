@@ -1,0 +1,209 @@
+{
+  "knowledge_id": "sales_psychology_001_knowledge",
+  "version": 1,
+  "status": "active",
+
+  "core_concepts": [
+    {
+      "id": "kc_001",
+      "topic": "upper_limit_problem",
+      "statement": "A person's income ceiling may be influenced by internal beliefs and tolerance for success.",
+      "source_type": "project_definition",
+      "confidence": 0.8,
+      "status": "active",
+      "tags": ["money", "self-worth", "income", "beliefs"]
+    },
+    {
+      "id": "kc_002",
+      "topic": "money_avoidance_scripts",
+      "statement": "Learned beliefs about money can influence pricing, selling behavior, and the emotional response to receiving money.",
+      "source_type": "project_definition",
+      "confidence": 0.8,
+      "status": "active",
+      "tags": ["money", "beliefs", "pricing", "sales"]
+    },
+    {
+      "id": "kc_003",
+      "topic": "nervous_system_and_sales",
+      "statement": "Sales situations can trigger fight, flight, freeze, or other protective nervous-system responses.",
+      "source_type": "project_definition",
+      "confidence": 0.85,
+      "status": "active",
+      "tags": ["nervous-system", "sales", "somatic", "fear"]
+    },
+    {
+      "id": "kc_004",
+      "topic": "undercharging",
+      "statement": "Undercharging can sometimes function as protection from rejection, judgment, or perceived social risk rather than simply reflecting modesty.",
+      "source_type": "project_definition",
+      "confidence": 0.75,
+      "status": "active",
+      "tags": ["undercharging", "pricing", "rejection", "self-worth"]
+    },
+    {
+      "id": "kc_005",
+      "topic": "over_delivering",
+      "statement": "Excessive over-delivering can sometimes reflect anxious pleasing or an attempt to earn safety and acceptance.",
+      "source_type": "project_definition",
+      "confidence": 0.75,
+      "status": "active",
+      "tags": ["over-delivering", "people-pleasing", "sales", "self-worth"]
+    }
+  ],
+
+  "audience_insights": [
+    {
+      "id": "ai_001",
+      "statement": "The audience often has substantial expertise but may still hesitate to charge according to the value they provide.",
+      "source_type": "project_definition",
+      "confidence": 0.9,
+      "status": "active",
+      "tags": ["expertise", "pricing", "self-worth"]
+    },
+    {
+      "id": "ai_002",
+      "statement": "Fear of appearing pushy, greedy, or overly sales-focused can interfere with confident selling.",
+      "source_type": "project_definition",
+      "confidence": 0.9,
+      "status": "active",
+      "tags": ["sales", "fear", "judgment"]
+    },
+    {
+      "id": "ai_003",
+      "statement": "Physical sensations such as jaw, diaphragm, or general body tension may appear around pricing and sales conversations.",
+      "source_type": "project_definition",
+      "confidence": 0.8,
+      "status": "active",
+      "tags": ["somatic", "tension", "sales-calls"]
+    }
+  ],
+
+  "psychological_mechanisms": [
+    {
+      "id": "pm_001",
+      "name": "fight_flight_freeze",
+      "description": "Protective nervous-system responses that may appear when a person perceives social, financial, or rejection-related threat.",
+      "source_type": "project_definition",
+      "confidence": 0.85,
+      "status": "active"
+    },
+    {
+      "id": "pm_002",
+      "name": "co_regulation",
+      "description": "Interpersonal nervous-system regulation and mirroring that may influence how people experience sales conversations.",
+      "source_type": "project_definition",
+      "confidence": 0.7,
+      "status": "active"
+    },
+    {
+      "id": "pm_003",
+      "name": "self_worth_pricing_link",
+      "description": "The perceived relationship between self-worth, pricing confidence, and tolerance for rejection.",
+      "source_type": "project_definition",
+      "confidence": 0.75,
+      "status": "active"
+    }
+  ],
+
+  "messaging": {
+    "key_messages": [
+      {
+        "id": "msg_001",
+        "statement": "The problem may not be a lack of sales scripts; the underlying issue can be the emotional and physiological response to selling.",
+        "status": "active"
+      },
+      {
+        "id": "msg_002",
+        "statement": "Higher pricing does not have to mean more pressure, manipulation, or burnout.",
+        "status": "active"
+      },
+      {
+        "id": "msg_003",
+        "statement": "Calm authority can replace anxious over-explaining and over-delivering.",
+        "status": "active"
+      }
+    ],
+    "beliefs_to_challenge": [
+      "I need more sales scripts.",
+      "Clients do not have money.",
+      "My niche is too complex to sell.",
+      "Selling is inherently pushy.",
+      "To earn more I simply need to work more."
+    ],
+    "beliefs_to_reinforce": [
+      "Expertise and self-worth do not require constant over-delivery.",
+      "Selling can be calm and ethical.",
+      "Pricing can be approached without shame.",
+      "Regulating the body can support clearer behavior in stressful sales situations."
+    ]
+  },
+
+  "content_patterns": {
+    "successful": [],
+    "failed": [],
+    "unvalidated": [
+      {
+        "id": "pattern_001",
+        "statement": "Relatable expert behaviors and subtle self-sabotage may create strong engagement because the audience recognizes itself in the behavior.",
+        "source_type": "project_definition",
+        "confidence": 0.6,
+        "status": "hypothesis"
+      }
+    ]
+  },
+
+  "hooks": {
+    "proven": [],
+    "experimental": [
+      {
+        "id": "hook_001",
+        "pattern": "Expose a familiar expert behavior and reveal a less obvious psychological reason behind it.",
+        "status": "experimental"
+      },
+      {
+        "id": "hook_002",
+        "pattern": "Challenge a common sales belief by reframing it as a nervous-system or self-worth issue.",
+        "status": "experimental"
+      }
+    ]
+  },
+
+  "content_pillars": [
+    {
+      "id": "pillar_001",
+      "name": "Relatable Pain",
+      "status": "active"
+    },
+    {
+      "id": "pillar_002",
+      "name": "Mindset Paradigm Shift",
+      "status": "active"
+    },
+    {
+      "id": "pillar_003",
+      "name": "Micro-Tools & Quick Tips",
+      "status": "active"
+    },
+    {
+      "id": "pillar_004",
+      "name": "Hard Truths & Myths",
+      "status": "active"
+    }
+  ],
+
+  "competitor_insights": [],
+
+  "market_insights": [],
+
+  "performance_learnings": [],
+
+  "research_log": [],
+
+  "metadata": {
+    "created_from": [
+      "project_definition",
+      "restored_project_concept"
+    ],
+    "last_reviewed": "2026-09-17"
+  }
+}

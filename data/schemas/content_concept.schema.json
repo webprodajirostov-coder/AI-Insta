@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "entity": "ContentConcept",
+
+  "concept_id": "concept_001",
+  "account_id": "sales_psychology_001",
+  "idea_id": "idea_001",
+
+  "status": "draft",
+
+  "core_message": "",
+
+  "problem": "",
+  "reframe": "",
+
+  "psychological_mechanism": "",
+
+  "key_points": [],
+
+  "hook": "",
+
+  "emotional_direction": "",
+
+  "audience_takeaway": "",
+
+  "cta": {
+    "type": "none",
+    "text": ""
+  },
+
+  "knowledge_refs": [],
+
+  "research_refs": [],
+
+  "production_profile": "simple",
+
+  "created_at": "",
+  "updated_at": ""
+}

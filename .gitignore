@@ -1,0 +1,46 @@
+# Secrets
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Generated media
+clips/
+*.mp4
+*.mp3
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Generated jobs / runtime data
+data/jobs/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+
+# Temporary test artifacts
+WAITING
+waiting
+waiting:
+completed:
+failed:
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated analysis results
+data/analyses/
+
+# Backup source files
+*.backup

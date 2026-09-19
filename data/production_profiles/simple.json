@@ -1,0 +1,36 @@
+{
+  "profile_id": "simple",
+  "version": 1,
+  "status": "active",
+
+  "description": "Minimal short-form content format using one visual, hook overlay, music, and caption.",
+
+  "visual": {
+    "count": 1,
+    "types": ["image", "video"],
+    "generation_required": false
+  },
+
+  "audio": {
+    "tts": false,
+    "music": true
+  },
+
+  "text": {
+    "hook_overlay": true,
+    "subtitles": false,
+    "dynamic_subtitles": false
+  },
+
+  "editing": {
+    "transitions": false,
+    "animation": "minimal"
+  },
+
+  "duration_seconds": {
+    "min": 6,
+    "max": 10
+  },
+
+  "cost_level": 1
+}

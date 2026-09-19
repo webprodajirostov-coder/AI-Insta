@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AudioAsset",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "entity",
+    "asset_id",
+    "job_id",
+    "type",
+    "status",
+    "source",
+    "path"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer"
+    },
+    "entity": {
+      "const": "AudioAsset"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "tts",
+        "music"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "generating",
+        "ready",
+        "failed"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "provider"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "voice": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "metadata": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "entity": "ContentConcept",
+
+  "concept_id": "concept_001",
+  "account_id": "sales_psychology_001",
+  "idea_id": "idea_001",
+
+  "status": "ready",
+
+  "core_message": "If you keep lowering your price, the problem may not be your pricing strategy. You may be protecting yourself from rejection.",
+
+  "problem": "An experienced expert knows their work is valuable but feels uncomfortable naming a higher price and unconsciously reduces the price to make rejection feel less threatening.",
+
+  "reframe": "Undercharging is not always modesty or market strategy. Sometimes it is a way to reduce the emotional risk of hearing no.",
+
+  "psychological_mechanism": "self_worth_pricing_link",
+
+  "key_points": [
+    "You know your expertise is valuable.",
+    "You prepare to name your price and feel tension or hesitation.",
+    "You lower the price before the client even objects.",
+    "The lower price can temporarily reduce fear of rejection.",
+    "The deeper work is learning to tolerate the emotional discomfort of being fully visible and appropriately priced."
+  ],
+
+  "hook": "You might not be undercharging because you're modest.",
+
+  "emotional_direction": "Recognition → surprise → self-reflection → relief",
+
+  "audience_takeaway": "Before changing your pricing strategy, notice what emotion appears when you imagine saying your real price.",
+
+  "cta": {
+    "type": "none",
+    "text": ""
+  },
+
+  "knowledge_refs": [
+    "kc_004",
+    "ai_001",
+    "ai_002",
+    "pm_003"
+  ],
+
+  "research_refs": [],
+
+  "production_profile": "simple",
+
+  "created_at": "2026-09-17T18:35:00",
+  "updated_at": "2026-09-17T18:35:00"
+}

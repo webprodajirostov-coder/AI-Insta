@@ -1,0 +1,37 @@
+{
+  "profile_id": "standard",
+  "version": 1,
+  "status": "active",
+
+  "description": "Medium-complexity short-form video using multiple visuals, TTS, subtitles, and music.",
+
+  "visual": {
+    "count": 2,
+    "count_max": 3,
+    "types": ["image", "video"],
+    "generation_required": true
+  },
+
+  "audio": {
+    "tts": true,
+    "music": true
+  },
+
+  "text": {
+    "hook_overlay": true,
+    "subtitles": true,
+    "dynamic_subtitles": false
+  },
+
+  "editing": {
+    "transitions": true,
+    "animation": "moderate"
+  },
+
+  "duration_seconds": {
+    "min": 20,
+    "max": 40
+  },
+
+  "cost_level": 2
+}

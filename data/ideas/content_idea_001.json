@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "entity": "ContentIdea",
+
+  "idea_id": "idea_001",
+  "account_id": "sales_psychology_001",
+
+  "status": "ready",
+
+  "source": {
+    "type": "knowledge",
+    "source_ids": [
+      "kc_004"
+    ]
+  },
+
+  "topic": "undercharging",
+  "content_pillar": "Relatable Pain",
+  "funnel_stage": "tofu",
+
+  "angle": "Undercharging may be less about being modest and more about avoiding rejection.",
+
+  "audience_problem": "An experienced expert keeps their prices lower than they want because naming a higher price feels emotionally unsafe.",
+
+  "audience_desire": "Charge appropriately without guilt, shame, or fear of rejection.",
+
+  "hook_direction": "Expose the hidden reason an expert keeps lowering their price.",
+
+  "why_now": "Pricing is often treated as a sales-skill problem while the emotional reason behind undercharging is ignored.",
+
+  "knowledge_refs": [
+    "kc_004",
+    "ai_001",
+    "ai_002"
+  ],
+
+  "production": {
+    "profile": "simple"
+  },
+
+  "priority": 80,
+
+  "created_at": "2026-09-17T18:30:00",
+  "updated_at": "2026-09-17T18:30:00"
+}

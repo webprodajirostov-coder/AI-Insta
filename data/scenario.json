@@ -1,0 +1,35 @@
+{
+  "content_type": "engagement",
+  "title": "The Price of Ego",
+  "viral_hook_reason": "It calls out a hidden psychological defense mechanism (ego protection) that most entrepreneurs feel but never name, creating immediate 'pattern interrupt' curiosity.",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "duration_seconds": 4,
+      "voiceover_text": "You keep your prices low because it’s a safety net for your ego.",
+      "visual_prompt_en": "Close-up of a person looking thoughtful and slightly frustrated, soft cinematic lighting, high-end office background, 9:16 aspect ratio.",
+      "screen_text": "Low prices = Ego protection"
+    },
+    {
+      "scene_number": 2,
+      "duration_seconds": 5,
+      "voiceover_text": "Because if they say no, you can tell yourself: 'It wasn't worth much anyway.' It’s a lie that keeps you exhausted.",
+      "visual_prompt_en": "Person sitting at a desk, looking at a laptop with a tired expression, rubbing their temples, moody cinematic lighting.",
+      "screen_text": "The lie you tell"
+    },
+    {
+      "scene_number": 3,
+      "duration_seconds": 5,
+      "voiceover_text": "Real confidence isn't needing them to buy. It's being perfectly okay even if they don't.",
+      "visual_prompt_en": "Person standing up confidently, adjusting their jacket, looking directly into the camera with a calm, steady gaze, blurred city skyline background.",
+      "screen_text": "Confidence is detachment"
+    },
+    {
+      "scene_number": 4,
+      "duration_seconds": 3,
+      "voiceover_text": "Save this for your next pricing call.",
+      "visual_prompt_en": "Text overlay graphic on a clean, minimal background with a 'Save this' call-to-action animation.",
+      "screen_text": "Save for later"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "entity": "ContentIdea",
+
+  "idea_id": "idea_001",
+  "account_id": "sales_psychology_001",
+
+  "status": "draft",
+
+  "source": {
+    "type": "knowledge",
+    "source_ids": []
+  },
+
+  "topic": "",
+  "content_pillar": "",
+  "funnel_stage": "tofu",
+
+  "angle": "",
+
+  "audience_problem": "",
+  "audience_desire": "",
+
+  "hook_direction": "",
+
+  "why_now": "",
+
+  "knowledge_refs": [],
+
+  "production": {
+    "profile": "simple"
+  },
+
+  "priority": 0,
+
+  "created_at": "",
+  "updated_at": ""
+}

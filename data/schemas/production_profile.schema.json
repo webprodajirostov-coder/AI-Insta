@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "entity": "ProductionProfile",
+
+  "profile_id": "simple",
+
+  "description": "",
+
+  "visual": {
+    "count": 1,
+    "type": "image_or_video",
+    "generation_required": false
+  },
+
+  "audio": {
+    "tts": false,
+    "music": true
+  },
+
+  "text": {
+    "hook_overlay": true,
+    "subtitles": false,
+    "dynamic_subtitles": false
+  },
+
+  "editing": {
+    "transitions": false,
+    "animation": "minimal"
+  },
+
+  "target_duration_seconds": {
+    "min": 6,
+    "max": 10
+  },
+
+  "cost_level": 1
+}

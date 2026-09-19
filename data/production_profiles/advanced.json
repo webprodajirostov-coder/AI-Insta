@@ -1,0 +1,38 @@
+{
+  "profile_id": "advanced",
+  "version": 1,
+  "status": "active",
+
+  "description": "High-complexity short-form video with multiple scenes, AI visuals or video, TTS, dynamic subtitles, music, and transitions.",
+
+  "visual": {
+    "count": 4,
+    "count_max": 6,
+    "types": ["image", "video", "ai_video"],
+    "generation_required": true
+  },
+
+  "audio": {
+    "tts": true,
+    "music": true,
+    "voiceover_required": true
+  },
+
+  "text": {
+    "hook_overlay": true,
+    "subtitles": true,
+    "dynamic_subtitles": true
+  },
+
+  "editing": {
+    "transitions": true,
+    "animation": "dynamic"
+  },
+
+  "duration_seconds": {
+    "min": 30,
+    "max": 40
+  },
+
+  "cost_level": 3
+}

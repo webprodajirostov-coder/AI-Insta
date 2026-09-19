@@ -1,0 +1,161 @@
+{
+  "account_id": "sales_psychology_001",
+  "version": 1,
+  "status": "active",
+
+  "identity": {
+    "language": "en",
+    "content_language": "English",
+    "niche": "Money Psychology / Sales Psychology / Mindset",
+    "positioning": "Helping experts improve sales through mindset and nervous-system work rather than pressure, manipulation, or burnout."
+  },
+
+  "audience": {
+    "primary": [
+      "solopreneurs",
+      "experts",
+      "consultants",
+      "helping professionals",
+      "freelancers"
+    ],
+    "profile": "Deeply experienced professionals who often undercharge despite having strong expertise.",
+    "pain_points": [
+      "undercharging",
+      "fear of naming a higher price",
+      "imposter syndrome",
+      "over-delivering",
+      "physical tension before sales calls",
+      "fear of rejection",
+      "fear of being perceived as pushy or greedy"
+    ],
+    "desires": [
+      "calm authority in selling",
+      "higher fees without guilt",
+      "conscious clients",
+      "less physical stress around sales"
+    ],
+    "common_objections": [
+      "I need more sales scripts",
+      "clients do not have money",
+      "my niche is too complex",
+      "sales is pushy"
+    ]
+  },
+
+  "positioning": {
+    "core_problem": "Experts often interpret sales difficulties as a lack of sales skill when subconscious protective responses may influence pricing, visibility, and selling behavior.",
+    "differentiator": [
+      "CBT-based work with beliefs and shame",
+      "somatic practices",
+      "nervous-system regulation",
+      "connection between self-worth, money beliefs, and sales behavior"
+    ],
+    "core_promise": "Help experts reduce psychological and physical barriers around selling so they can approach pricing and sales with greater calm and self-worth."
+  },
+
+  "products": [
+    {
+      "product_id": "somatic_mindset_sales_reset",
+      "name": "The Somatic & Mindset Sales Reset",
+      "price_usd": 19,
+      "format": [
+        "interactive PDF",
+        "Notion template"
+      ],
+      "purpose": "Help experts work through fear of high-ticket pricing, imposter syndrome, and physical tension in sales situations.",
+      "methods": [
+        "CBT",
+        "somatic practices",
+        "nervous-system regulation",
+        "belief work",
+        "diaphragm relaxation",
+        "jaw relaxation"
+      ],
+      "cta_options": [
+        "Get the $19 Reset",
+        "Unlock the Full Toolkit"
+      ]
+    }
+  ],
+
+  "lead_magnet": {
+    "name": "5 Subconscious Triggers Sabotaging Your Sales",
+    "keyword": "RESET",
+    "cta": "Link in bio or DM RESET"
+  },
+
+  "content_strategy": {
+    "content_mix": {
+      "engagement_tofu": 0.8,
+      "conversion_mofu_bofu": 0.2
+    },
+    "pillars": [
+      "Relatable Pain",
+      "Mindset Paradigm Shift",
+      "Micro-Tools & Quick Tips",
+      "Hard Truths & Myths"
+    ],
+    "primary_goal": "Build trust, reach, saves, shares, discussion, and followers.",
+    "conversion_goal": "Naturally connect relevant content to the product or lead magnet without aggressive selling."
+  },
+
+  "style": {
+    "tone": [
+      "calm",
+      "deep",
+      "expert",
+      "supportive",
+      "direct",
+      "grounded"
+    ],
+    "visual_mood": [
+      "dark",
+      "minimalist",
+      "cinematic",
+      "luxury",
+      "restrained"
+    ],
+    "avoid": [
+      "aggressive sales",
+      "pressure tactics",
+      "manipulation",
+      "infomercial style",
+      "quick-money promises",
+      "loud neon visuals",
+      "cliches"
+    ]
+  },
+
+  "content_rules": {
+    "hooks": {
+      "target_word_count": "10-12 words",
+      "requirements": [
+        "clear pain or pattern interruption",
+        "strong first impression",
+        "avoid empty clickbait"
+      ]
+    },
+    "claims": {
+      "avoid": [
+        "guaranteed wealth",
+        "guaranteed income",
+        "get rich quickly"
+      ]
+    },
+    "cta": {
+      "tofu": "Usually no direct sales CTA.",
+      "mofu_bofu": "Use native bridges to the product or lead magnet."
+    }
+  },
+
+  "production_defaults": {
+    "aspect_ratio": "9:16",
+    "baseline_format": "simple",
+    "baseline_description": "Short visual background with hook overlay, music, and caption. No mandatory TTS, multi-scene structure, or subtitles.",
+    "supported_complexity_levels": [
+      "simple",
+      "standard",
+      "advanced"
+    ]
+  }
+}

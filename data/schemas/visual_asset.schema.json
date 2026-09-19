@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VisualAsset",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "entity",
+    "asset_id",
+    "job_id",
+    "type",
+    "status",
+    "source",
+    "path"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer"
+    },
+    "entity": {
+      "const": "VisualAsset"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "generating",
+        "ready",
+        "failed"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "provider",
+        "prompt"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        }
+      }
+    },
+    "path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "provider_job": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "status_url": {
+          "type": "string"
+        },
+        "response_url": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
