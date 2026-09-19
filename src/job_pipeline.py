@@ -127,7 +127,7 @@ def resolve_visual_stage(job_dir):
     if status == "failed":
         print("VISUAL STAGE: FAILED")
         print("ACTION: STOP")
-        return "failed"
+        return "failed", asset["asset_id"]
 
     raise ValueError(f"Unknown VisualAsset status: {status}")
 
@@ -397,11 +397,6 @@ def run_pipeline(job_dir):
             status="failed",
             error=e,
         )
-        print("JOB STATUS: failed")
-        print("ERROR:", e)
-        print("========================")
-        return False
-
         print("JOB STATUS: failed")
         print("ERROR:", e)
         print("========================")
