@@ -517,16 +517,36 @@ def dry_run_pipeline(job_dir):
     music_enabled = scenario.get("audio", {}).get("music", False)
 
     if music_enabled:
-        try:
-            audio_asset = find_audio_asset(job_dir)
-            audio_path = resolve_audio_asset(job_dir, audio_asset["asset_id"])
+        from src.audio_resolver import resolve_audio_asset
+
+        assets_dir = job_dir / "media" / "audio"
+        candidates = []
+
+        for asset_path in assets_dir.glob("*.json"):
+            with open(asset_path, "r", encoding="utf-8") as f:
+                asset = json.load(f)
+
+            if asset.get("entity") == "AudioAsset":
+                candidates.append(asset)
+
+        ready = [
+            asset
+            for asset in candidates
+            if asset.get("status") == "ready"
+        ]
+
+        if len(ready) > 1:
+            raise ValueError(
+                f"Multiple ready AudioAssets found: "
+                f"{[asset.get('asset_id') for asset in ready]}"
+            )
+
+        if len(ready) == 1:
+            audio_path = resolve_audio_asset(job_dir, ready[0]["asset_id"])
             print(f"AUDIO: ready -> {audio_path}")
-        except Exception:
+        else:
             print("AUDIO: no ready music asset")
-            generate_mock_music(job_dir)
-            audio_asset = find_audio_asset(job_dir)
-            audio_path = resolve_audio_asset(job_dir, audio_asset["asset_id"])
-            print(f"AUDIO: ready -> {audio_path}")
+            print("ACTION: WOULD GENERATE MOCK MUSIC")
     else:
         print("AUDIO: music disabled")
 
