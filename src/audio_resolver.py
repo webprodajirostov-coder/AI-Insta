@@ -7,7 +7,7 @@ def load_json(path):
         return json.load(f)
 
 
-def resolve_audio_asset(job_dir, asset_id="music_001"):
+def resolve_audio_asset(job_dir, asset_id):
     job_dir = Path(job_dir)
 
     job = load_json(job_dir / "job.json")
@@ -58,12 +58,12 @@ def resolve_audio_asset(job_dir, asset_id="music_001"):
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 2:
-        print("Usage: python src/audio_resolver.py <job_dir>")
+    if len(sys.argv) != 3:
+        print("Usage: python src/audio_resolver.py <job_dir> <asset_id>")
         raise SystemExit(1)
 
     try:
-        path = resolve_audio_asset(sys.argv[1])
+        path = resolve_audio_asset(sys.argv[1], sys.argv[2])
         print(f"AUDIO RESOLVED: {path}")
     except Exception as e:
         print(f"AUDIO RESOLVE FAILED: {e}")
