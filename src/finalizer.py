@@ -1,9 +1,9 @@
 import sys
+import json
 from pathlib import Path
 
 from src.assembly_renderer import render_assembly
 from src.output_validator import validate_output
-from src.update_job_stage import update_stage
 
 
 def finalize(job_dir):
@@ -13,21 +13,26 @@ def finalize(job_dir):
     print("===== FINALIZE OUTPUT =====")
 
     try:
-        print()
-        print("[1/3] RENDER")
-        render_assembly(job_dir)
+        with open(job_dir / "job.json", "r", encoding="utf-8") as f:
+            job = json.load(f)
+
+        if job["pipeline"].get("output") == "completed":
+            print()
+            print("[1/3] RENDER: SKIPPED (OUTPUT ALREADY COMPLETED)")
+        else:
+            print()
+            print("[1/3] RENDER")
+            render_assembly(job_dir)
 
         print()
         print("[2/3] VALIDATE")
         validate_output(job_dir)
 
         print()
-        print("[3/3] UPDATE JOB STAGE")
-        update_stage(
-            str(job_dir),
-            "output",
-            "completed",
-        )
+        print("[3/3] COMPLETE JOB")
+        from src.job_pipeline import complete_job_after_output_validation
+
+        complete_job_after_output_validation(job_dir)
 
         print()
         print("===== FINALIZE RESULT =====")

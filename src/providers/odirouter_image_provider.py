@@ -57,3 +57,52 @@ class ODIRouterImageProvider:
             )
 
         return data
+
+    def get_status(self, status_url):
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        response = requests.get(
+            status_url,
+            headers=headers,
+            timeout=60,
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+    def download_file(self, file_url, output_path):
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        response = requests.get(
+            file_url,
+            headers=headers,
+            timeout=120,
+        )
+
+        response.raise_for_status()
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(response.content)
+
+        return output_path
+
+    def get_result(self, response_url):
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        response = requests.get(
+            response_url,
+            headers=headers,
+            timeout=60,
+        )
+
+        response.raise_for_status()
+
+        return response.json()

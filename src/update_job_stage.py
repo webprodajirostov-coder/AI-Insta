@@ -2,7 +2,16 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-STAGE_STATUSES = {"skipped", "waiting", "completed", "failed"}
+STAGE_ALLOWED_STATUSES = {
+    "research": {"completed", "skipped", "failed"},
+    "analysis": {"completed", "skipped", "failed"},
+    "concept": {"completed", "failed"},
+    "scenario": {"completed", "failed"},
+    "audio": {"completed", "failed"},
+    "visual": {"completed", "waiting", "failed"},
+    "assembly": {"completed", "failed"},
+    "output": {"completed", "failed"},
+}
 
 
 def update_stage(job_dir, stage, status):
@@ -15,8 +24,18 @@ def update_stage(job_dir, stage, status):
     if stage not in job["pipeline"]:
         raise ValueError(f"Unknown pipeline stage: {stage}")
 
-    if status not in STAGE_STATUSES:
-        raise ValueError(f"Invalid pipeline stage status: {status}")
+    if stage not in STAGE_ALLOWED_STATUSES:
+        raise ValueError(f"Unsupported pipeline stage: {stage}")
+
+    if status not in STAGE_ALLOWED_STATUSES[stage]:
+        raise ValueError(
+            f"Invalid status for pipeline stage {stage}: {status}"
+        )
+
+    if stage == "output" and status == "completed":
+        raise ValueError(
+            "Output completion is reserved for final job completion"
+        )
 
     job["pipeline"][stage] = status
     job["updated_at"] = datetime.now().isoformat(timespec="seconds")

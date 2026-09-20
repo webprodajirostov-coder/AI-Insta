@@ -6,9 +6,9 @@ JOB_STATUSES = {"created", "waiting", "completed", "failed"}
 
 JOB_STATUS_TRANSITIONS = {
     "created": {"waiting", "failed"},
-    "waiting": {"completed", "failed"},
+    "waiting": {"failed"},
     "completed": set(),
-    "failed": {"waiting", "completed"},
+    "failed": {"waiting"},
 }
 
 PIPELINE_STAGES = [
@@ -39,6 +39,10 @@ def load_json(path):
         return json.load(f)
 
 
+def expected_output_path(job_dir):
+    return Path(job_dir).resolve() / "output" / "final.mp4"
+
+
 def validate_job(job):
     if not job.get("job_id"):
         raise ValueError("Job has no job_id")
@@ -59,6 +63,159 @@ def validate_job(job):
         raise ValueError(f"Job is missing pipeline stages: {missing}")
 
     return True
+
+
+def validate_completed_job(job_dir, job):
+    job_dir = Path(job_dir)
+    validate_job(job)
+
+    if job.get("status") != "completed":
+        raise ValueError("Completed job validation requires status=completed")
+
+    pipeline = job["pipeline"]
+
+    for stage in ("research", "analysis"):
+        if pipeline[stage] not in {"completed", "skipped"}:
+            raise ValueError(
+                f"Completed job has invalid {stage} stage: "
+                f"{pipeline[stage]}"
+            )
+
+    for stage in (
+        "concept",
+        "scenario",
+        "audio",
+        "visual",
+        "assembly",
+        "output",
+    ):
+        if pipeline[stage] != "completed":
+            raise ValueError(
+                f"Completed job has incomplete {stage} stage: "
+                f"{pipeline[stage]}"
+            )
+
+    if any(
+        pipeline[stage] in {"pending", "waiting", "failed"}
+        for stage in PIPELINE_STAGES
+    ):
+        raise ValueError("Completed job has a non-terminal pipeline stage")
+
+    output_path = job.get("artifacts", {}).get("output")
+    if not output_path:
+        raise ValueError("Completed job has no output artifact")
+
+    resolved_output_path = Path(output_path).resolve()
+    expected_path = expected_output_path(job_dir)
+
+    if resolved_output_path != expected_path:
+        raise ValueError(
+            "Completed job output path does not belong to this job: "
+            f"{resolved_output_path}"
+        )
+
+    if not resolved_output_path.is_file():
+        raise FileNotFoundError(
+            f"Completed job output does not exist: {resolved_output_path}"
+        )
+
+    plan = load_json(job_dir / "assembly" / "assembly_plan.json")
+    plan_output_path = Path(plan.get("output", {}).get("path", "")).resolve()
+
+    if plan_output_path != expected_path:
+        raise ValueError(
+            "AssemblyPlan output path does not match the job output path"
+        )
+
+    from src.output_validator import validate_output
+
+    validate_output(job_dir)
+    return True
+
+
+def complete_job_after_output_validation(job_dir):
+    job_dir = Path(job_dir)
+    job_path = job_dir / "job.json"
+    job = load_job(job_dir)
+    validate_job(job)
+
+    output_path = expected_output_path(job_dir)
+
+    if not output_path.is_file():
+        raise FileNotFoundError(
+            f"Final output does not exist: {output_path}"
+        )
+
+    plan = load_json(job_dir / "assembly" / "assembly_plan.json")
+    plan_output_path = Path(plan.get("output", {}).get("path", "")).resolve()
+
+    if plan_output_path != output_path:
+        raise ValueError(
+            "AssemblyPlan output path does not match the job output path"
+        )
+
+    for stage in ("research", "analysis"):
+        if job["pipeline"][stage] not in {"completed", "skipped"}:
+            raise ValueError(
+                f"Cannot complete job: {stage} is "
+                f"{job['pipeline'][stage]}"
+            )
+
+    for stage in ("concept", "scenario", "audio", "visual", "assembly"):
+        if job["pipeline"][stage] != "completed":
+            raise ValueError(
+                f"Cannot complete job: {stage} is "
+                f"{job['pipeline'][stage]}"
+            )
+
+    job["pipeline"]["output"] = "completed"
+    job.setdefault("artifacts", {})
+    job["artifacts"]["output"] = str(output_path)
+    job["status"] = "completed"
+    job["error"] = None
+
+    validate_completed_job(job_dir, job)
+
+    from datetime import datetime
+
+    job["updated_at"] = datetime.now().isoformat(timespec="seconds")
+
+    with open(job_path, "w", encoding="utf-8") as f:
+        json.dump(job, f, ensure_ascii=False, indent=2)
+
+    return job
+
+
+def materialize_preproduction_stages(job_dir):
+    job_dir = Path(job_dir)
+    job = load_job(job_dir)
+    validate_job(job)
+
+    from src.update_job_stage import update_stage
+
+    target_states = {
+        "research": "skipped",
+        "analysis": "skipped",
+        "concept": "completed",
+        "scenario": "completed",
+    }
+
+    for stage, target_status in target_states.items():
+        current_status = job["pipeline"][stage]
+
+        if current_status == target_status:
+            continue
+
+        if stage in {"research", "analysis"} and current_status == "completed":
+            continue
+
+        if current_status != "pending":
+            raise ValueError(
+                f"Cannot materialize {stage}: status={current_status}"
+            )
+
+        update_stage(job_dir, stage, target_status)
+        job["pipeline"][stage] = target_status
 
 
 def inspect_pipeline(job_dir):
@@ -251,6 +408,13 @@ def run_ready_pipeline(job_dir):
     job = load_job(job_dir)
     validate_job(job)
 
+    if job.get("status") == "completed":
+        validate_completed_job(job_dir, job)
+        print("JOB: already completed")
+        return True
+
+    materialize_preproduction_stages(job_dir)
+
     print("===== READY PIPELINE =====")
 
     # AUDIO
@@ -298,6 +462,8 @@ def run_ready_pipeline(job_dir):
     visual_result = run_visual_stage(job_dir)
 
     if visual_result == "waiting":
+        update_stage(job_dir, "visual", "waiting")
+        update_job_state(job_dir, status="waiting")
         print("VISUAL: waiting for provider")
         return False
 
@@ -323,14 +489,16 @@ def run_ready_pipeline(job_dir):
     job = load_job(job_dir)
 
     if job["pipeline"]["output"] == "completed":
-        print("OUTPUT: already completed")
+        print("OUTPUT: already completed; finalizing lifecycle")
     else:
-        from src.finalizer import finalize
+        print("OUTPUT: finalizing")
 
-        if not finalize(job_dir):
-            return False
+    from src.finalizer import finalize
 
-        print("OUTPUT: completed")
+    if not finalize(job_dir):
+        return False
+
+    print("OUTPUT: completed")
 
     print("=========================")
     return True
@@ -393,23 +561,27 @@ def run_pipeline(job_dir):
     # Idempotency guard:
     # a completed job must not rewrite its state or rerun any stage.
     if job.get("status") == "completed":
-        output_path = job.get("artifacts", {}).get("output")
+        validate_completed_job(job_dir, job)
+        output_path = job["artifacts"]["output"]
 
-        if output_path and Path(output_path).exists():
-            print("===== FULL PIPELINE =====")
-            print("JOB:", job["job_id"])
-            print("JOB STATUS: completed")
-            print("ACTION: SKIP — JOB ALREADY COMPLETED")
-            print("OUTPUT:", output_path)
-            print("========================")
-            return True
+        print("===== FULL PIPELINE =====")
+        print("JOB:", job["job_id"])
+        print("JOB STATUS: completed")
+        print("ACTION: SKIP — JOB ALREADY COMPLETED")
+        print("OUTPUT:", output_path)
+        print("========================")
+        return True
 
     print("===== FULL PIPELINE =====")
     print("JOB:", job["job_id"])
 
     from src.update_job_stage import update_stage
 
+    active_stage = None
+
     try:
+        materialize_preproduction_stages(job_dir)
+
         # =========================
         # AUDIO
         # =========================
@@ -418,6 +590,7 @@ def run_pipeline(job_dir):
         if job["pipeline"]["audio"] == "completed":
             print("AUDIO: already completed")
         else:
+            active_stage = "audio"
             audio_result = run_audio_stage(job_dir)
 
             if audio_result == "completed":
@@ -425,12 +598,12 @@ def run_pipeline(job_dir):
                 print("AUDIO: completed")
 
             elif audio_result == "skipped":
-                update_stage(job_dir, "audio", "skipped")
-                print("AUDIO: skipped")
+                raise RuntimeError("Audio stage cannot be skipped")
 
         # =========================
         # VISUAL
         # =========================
+        active_stage = "visual"
         visual_action, visual_asset_id = resolve_visual_stage(job_dir)
 
         if visual_action == "ready":
@@ -457,6 +630,7 @@ def run_pipeline(job_dir):
         # =========================
         # ASSEMBLY
         # =========================
+        active_stage = "assembly"
         job = load_job(job_dir)
 
         if job["pipeline"]["assembly"] != "completed":
@@ -477,6 +651,7 @@ def run_pipeline(job_dir):
         # =========================
         # OUTPUT
         # =========================
+        active_stage = "output"
         job = load_job(job_dir)
 
         if job["pipeline"]["output"] != "completed":
@@ -497,24 +672,17 @@ def run_pipeline(job_dir):
         else:
             print("OUTPUT: already completed")
 
-        # =========================
-        # COMPLETED
-        # =========================
-        output_path = (
-            job_dir / "output" / "final.mp4"
-        )
-
-        update_job_state(
-            job_dir,
-            status="completed",
-            output_path=output_path,
-        )
+        job = load_job(job_dir)
+        validate_completed_job(job_dir, job)
 
         print("JOB STATUS: completed")
         print("========================")
         return True
 
     except Exception as e:
+        if active_stage:
+            update_stage(job_dir, active_stage, "failed")
+
         update_job_state(
             job_dir,
             status="failed",
@@ -531,9 +699,32 @@ def update_job_state(job_dir, status=None, output_path=None, error=None):
 
     job = load_job(job_dir)
 
+    if status == "completed":
+        raise ValueError(
+            "Job completion is reserved for final output completion"
+        )
+
+    if output_path is not None:
+        raise ValueError(
+            "Output artifacts are reserved for final output completion"
+        )
+
     if status is not None:
         if status not in JOB_STATUSES:
             raise ValueError(f"Invalid job status: {status}")
+
+        if status == "waiting" and job["pipeline"].get("visual") != "waiting":
+            raise ValueError(
+                "Waiting job status requires pipeline.visual=waiting"
+            )
+
+        if status == "failed" and not any(
+            stage_status == "failed"
+            for stage_status in job["pipeline"].values()
+        ):
+            raise ValueError(
+                "Failed job status requires a failed pipeline stage"
+            )
 
         current_status = job.get("status")
         if status != current_status and status not in JOB_STATUS_TRANSITIONS.get(current_status, set()):
@@ -543,9 +734,9 @@ def update_job_state(job_dir, status=None, output_path=None, error=None):
 
         job["status"] = status
 
-    if output_path is not None:
-        job.setdefault("artifacts", {})
-        job["artifacts"]["output"] = str(Path(output_path).resolve())
+        if status == "failed":
+            job.setdefault("artifacts", {})
+            job["artifacts"]["output"] = None
 
     if error is not None:
         job["error"] = str(error)

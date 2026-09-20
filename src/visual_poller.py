@@ -1,9 +1,7 @@
 import json
-import os
 from pathlib import Path
 
-import requests
-from dotenv import load_dotenv
+from src.providers.odirouter_image_provider import ODIRouterImageProvider
 
 
 def load_json(path):
@@ -49,11 +47,7 @@ def find_visual_asset(job_dir, asset_id=None):
 def poll_visual(job_dir, asset_id=None):
     job_dir = Path(job_dir)
 
-    load_dotenv(Path(".env").resolve())
-
-    api_key = os.getenv("ODIROUTER_API_KEY")
-    if not api_key:
-        raise RuntimeError("ODIROUTER_API_KEY is not configured")
+    provider = ODIRouterImageProvider()
 
     asset_path, asset = find_visual_asset(job_dir, asset_id)
 
@@ -85,18 +79,7 @@ def poll_visual(job_dir, asset_id=None):
             f"VisualAsset {asset['asset_id']} has incomplete provider_job"
         )
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-    }
-
-    status_response = requests.get(
-        status_url,
-        headers=headers,
-        timeout=60,
-    )
-    status_response.raise_for_status()
-
-    status_data = status_response.json()
+    status_data = provider.get_status(status_url)
     provider_status = str(
         status_data.get("status", "")
     ).lower()
@@ -118,14 +101,7 @@ def poll_visual(job_dir, asset_id=None):
         print("VISUAL: STILL PROCESSING")
         return False
 
-    response = requests.get(
-        response_url,
-        headers=headers,
-        timeout=60,
-    )
-    response.raise_for_status()
-
-    result = response.json()
+    result = provider.get_result(response_url)
 
     content = result["output"][0]["content"][0]
 
@@ -136,13 +112,6 @@ def poll_visual(job_dir, asset_id=None):
 
     image_url = content["url"]
 
-    image_response = requests.get(
-        image_url,
-        headers=headers,
-        timeout=120,
-    )
-    image_response.raise_for_status()
-
     output_path = (
         job_dir
         / "media"
@@ -150,7 +119,10 @@ def poll_visual(job_dir, asset_id=None):
         / f"{asset['asset_id']}.png"
     )
 
-    output_path.write_bytes(image_response.content)
+    provider.download_file(
+        image_url,
+        output_path,
+    )
 
     asset["status"] = "ready"
     asset["path"] = str(output_path.resolve())
