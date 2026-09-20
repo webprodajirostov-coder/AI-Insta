@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from src.update_job_stage import update_stage
+
 
 JOB_STATUSES = {"created", "waiting", "completed", "failed"}
 
@@ -61,6 +63,19 @@ def validate_job(job):
     missing = [stage for stage in PIPELINE_STAGES if stage not in pipeline]
     if missing:
         raise ValueError(f"Job is missing pipeline stages: {missing}")
+
+    from src.update_job_stage import STAGE_ALLOWED_STATUSES
+
+    for stage in PIPELINE_STAGES:
+        stage_status = pipeline[stage]
+
+        valid_statuses = STAGE_ALLOWED_STATUSES[stage] | {"pending"}
+
+        if stage_status not in valid_statuses:
+            raise ValueError(
+                f"Job has invalid {stage} stage status: "
+                f"{stage_status}"
+            )
 
     return True
 
@@ -454,7 +469,6 @@ def run_ready_pipeline(job_dir):
             raise RuntimeError("No ready AudioAsset found")
 
         resolve_audio_asset(job_dir, audio_asset["asset_id"])
-        from src.update_job_stage import update_stage
         update_stage(job_dir, "audio", "completed")
         print("AUDIO: completed")
 
@@ -467,9 +481,13 @@ def run_ready_pipeline(job_dir):
         print("VISUAL: waiting for provider")
         return False
 
-    from src.update_job_stage import update_stage
-    update_stage(job_dir, "visual", "completed")
-    print("VISUAL: completed")
+    job = load_job(job_dir)
+
+    if job["pipeline"]["visual"] == "completed":
+        print("VISUAL: already completed")
+    else:
+        update_stage(job_dir, "visual", "completed")
+        print("VISUAL: completed")
 
     # ASSEMBLY
     job = load_job(job_dir)

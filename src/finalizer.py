@@ -4,6 +4,7 @@ from pathlib import Path
 
 from src.assembly_renderer import render_assembly
 from src.output_validator import validate_output
+from src.update_job_stage import update_stage
 
 
 def finalize(job_dir):
