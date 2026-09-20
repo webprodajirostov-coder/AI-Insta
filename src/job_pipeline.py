@@ -518,12 +518,14 @@ def dry_run_pipeline(job_dir):
 
     if music_enabled:
         try:
-            audio_path = resolve_audio_asset(job_dir)
+            audio_asset = find_audio_asset(job_dir)
+            audio_path = resolve_audio_asset(job_dir, audio_asset["asset_id"])
             print(f"AUDIO: ready -> {audio_path}")
         except Exception:
             print("AUDIO: no ready music asset")
             generate_mock_music(job_dir)
-            audio_path = resolve_audio_asset(job_dir)
+            audio_asset = find_audio_asset(job_dir)
+            audio_path = resolve_audio_asset(job_dir, audio_asset["asset_id"])
             print(f"AUDIO: ready -> {audio_path}")
     else:
         print("AUDIO: music disabled")
