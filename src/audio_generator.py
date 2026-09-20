@@ -76,9 +76,67 @@ def generate_mock_music(job_dir, duration_seconds=8):
     asset_dir = job_dir / "media" / "audio"
     asset_dir.mkdir(parents=True, exist_ok=True)
 
-    asset_id = "music_001"
+    existing_assets = []
+
+    for asset_json in sorted(asset_dir.glob("*.json")):
+        try:
+            asset = load_json(asset_json)
+        except Exception:
+            continue
+
+        if asset.get("entity") == "AudioAsset" and asset.get("type") == "music":
+            existing_assets.append((asset_json, asset))
+
+    active = [
+        item
+        for item in existing_assets
+        if item[1].get("status") in {"pending", "generating", "ready"}
+    ]
+
+    if len(active) > 1:
+        raise ValueError(
+            "Multiple active AudioAssets found: "
+            f"{[item[1].get('asset_id') for item in active]}"
+        )
+
+    failed = [
+        item
+        for item in existing_assets
+        if item[1].get("status") == "failed"
+    ]
+
+    if len(failed) > 1:
+        raise ValueError(
+            "Multiple failed AudioAssets found: "
+            f"{[item[1].get('asset_id') for item in failed]}"
+        )
+
+    if active:
+        asset_json_path, existing_asset = active[0]
+        asset_id = existing_asset["asset_id"]
+
+        if existing_asset.get("status") == "ready":
+            print("AUDIO GENERATION: SKIP")
+            print("REASON: existing asset is already ready")
+            return asset_json_path
+
+        if existing_asset.get("status") in {"pending", "generating"}:
+            print("AUDIO GENERATION: SKIP")
+            print(
+                "REASON: existing asset is already",
+                existing_asset.get("status"),
+            )
+            return asset_json_path
+    elif failed:
+        asset_json_path, existing_asset = failed[0]
+        asset_id = existing_asset["asset_id"]
+        print("AUDIO GENERATION: RETRY")
+        print("REASON: existing asset is failed")
+    else:
+        asset_id = f"music_{len(existing_assets) + 1:03d}"
+        asset_json_path = asset_dir / f"{asset_id}.json"
+
     audio_path = asset_dir / f"{asset_id}.mp3"
-    asset_json_path = asset_dir / f"{asset_id}.json"
 
     import subprocess
 
