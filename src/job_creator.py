@@ -3,6 +3,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from src.domain_validation import validate_content_chain
+
 
 PIPELINE_STAGES = [
     "research",
@@ -27,12 +29,14 @@ def create_job(
     scenario_path,
     production_profile_path,
     jobs_root="data/jobs",
+    accounts_root="data/accounts",
 ):
     content_idea_path = Path(content_idea_path)
     content_concept_path = Path(content_concept_path)
     scenario_path = Path(scenario_path)
     production_profile_path = Path(production_profile_path)
     jobs_root = Path(jobs_root)
+    accounts_root = Path(accounts_root)
 
     idea = load_json(content_idea_path)
     concept = load_json(content_concept_path)
@@ -40,19 +44,31 @@ def create_job(
     profile = load_json(production_profile_path)
 
     account_id = idea["account_id"]
+    account_path = accounts_root / account_id / "account.json"
+    knowledge_path = accounts_root / account_id / "knowledge.json"
+
+    if not account_path.exists():
+        raise FileNotFoundError(f"Account not found: {account_path}")
+
+    if not knowledge_path.exists():
+        raise FileNotFoundError(f"Knowledge not found: {knowledge_path}")
+
+    account = load_json(account_path)
+    knowledge = load_json(knowledge_path)
+
+    validate_content_chain(
+        account=account,
+        knowledge=knowledge,
+        idea=idea,
+        concept=concept,
+        scenario=scenario,
+        profile=profile,
+    )
+
     idea_id = idea["idea_id"]
     concept_id = concept["concept_id"]
     scenario_id = scenario["scenario_id"]
     profile_id = profile["profile_id"]
-
-    if concept["idea_id"] != idea_id:
-        raise ValueError("ContentConcept does not match ContentIdea")
-
-    if scenario["concept_id"] != concept_id:
-        raise ValueError("Scenario does not match ContentConcept")
-
-    if scenario["production_profile"] != profile_id:
-        raise ValueError("Scenario does not match ProductionProfile")
 
     now = datetime.now().replace(microsecond=0)
     job_id = now.strftime("%Y%m%d_%H%M%S")

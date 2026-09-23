@@ -1,8 +1,8 @@
 {
   "knowledge_id": "sales_psychology_001_knowledge",
+  "account_id": "sales_psychology_001",
   "version": 1,
   "status": "active",
-
   "core_concepts": [
     {
       "id": "kc_001",
@@ -11,7 +11,12 @@
       "source_type": "project_definition",
       "confidence": 0.8,
       "status": "active",
-      "tags": ["money", "self-worth", "income", "beliefs"]
+      "tags": [
+        "money",
+        "self-worth",
+        "income",
+        "beliefs"
+      ]
     },
     {
       "id": "kc_002",
@@ -20,7 +25,12 @@
       "source_type": "project_definition",
       "confidence": 0.8,
       "status": "active",
-      "tags": ["money", "beliefs", "pricing", "sales"]
+      "tags": [
+        "money",
+        "beliefs",
+        "pricing",
+        "sales"
+      ]
     },
     {
       "id": "kc_003",
@@ -29,7 +39,12 @@
       "source_type": "project_definition",
       "confidence": 0.85,
       "status": "active",
-      "tags": ["nervous-system", "sales", "somatic", "fear"]
+      "tags": [
+        "nervous-system",
+        "sales",
+        "somatic",
+        "fear"
+      ]
     },
     {
       "id": "kc_004",
@@ -38,7 +53,12 @@
       "source_type": "project_definition",
       "confidence": 0.75,
       "status": "active",
-      "tags": ["undercharging", "pricing", "rejection", "self-worth"]
+      "tags": [
+        "undercharging",
+        "pricing",
+        "rejection",
+        "self-worth"
+      ]
     },
     {
       "id": "kc_005",
@@ -47,10 +67,14 @@
       "source_type": "project_definition",
       "confidence": 0.75,
       "status": "active",
-      "tags": ["over-delivering", "people-pleasing", "sales", "self-worth"]
+      "tags": [
+        "over-delivering",
+        "people-pleasing",
+        "sales",
+        "self-worth"
+      ]
     }
   ],
-
   "audience_insights": [
     {
       "id": "ai_001",
@@ -58,7 +82,11 @@
       "source_type": "project_definition",
       "confidence": 0.9,
       "status": "active",
-      "tags": ["expertise", "pricing", "self-worth"]
+      "tags": [
+        "expertise",
+        "pricing",
+        "self-worth"
+      ]
     },
     {
       "id": "ai_002",
@@ -66,7 +94,11 @@
       "source_type": "project_definition",
       "confidence": 0.9,
       "status": "active",
-      "tags": ["sales", "fear", "judgment"]
+      "tags": [
+        "sales",
+        "fear",
+        "judgment"
+      ]
     },
     {
       "id": "ai_003",
@@ -74,10 +106,13 @@
       "source_type": "project_definition",
       "confidence": 0.8,
       "status": "active",
-      "tags": ["somatic", "tension", "sales-calls"]
+      "tags": [
+        "somatic",
+        "tension",
+        "sales-calls"
+      ]
     }
   ],
-
   "psychological_mechanisms": [
     {
       "id": "pm_001",
@@ -104,7 +139,6 @@
       "status": "active"
     }
   ],
-
   "messaging": {
     "key_messages": [
       {
@@ -137,7 +171,6 @@
       "Regulating the body can support clearer behavior in stressful sales situations."
     ]
   },
-
   "content_patterns": {
     "successful": [],
     "failed": [],
@@ -151,7 +184,6 @@
       }
     ]
   },
-
   "hooks": {
     "proven": [],
     "experimental": [
@@ -167,7 +199,6 @@
       }
     ]
   },
-
   "content_pillars": [
     {
       "id": "pillar_001",
@@ -190,15 +221,10 @@
       "status": "active"
     }
   ],
-
   "competitor_insights": [],
-
   "market_insights": [],
-
   "performance_learnings": [],
-
   "research_log": [],
-
   "metadata": {
     "created_from": [
       "project_definition",

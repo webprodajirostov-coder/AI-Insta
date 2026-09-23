@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "entity": "Account",
+
+  "account_id": "sales_psychology_001",
+  "version": 1,
+  "status": "active",
+
+  "identity": {
+    "language": "en",
+    "content_language": "English",
+    "niche": "",
+    "positioning": ""
+  },
+
+  "audience": {
+    "primary": [],
+    "profile": "",
+    "pain_points": [],
+    "desires": [],
+    "common_objections": []
+  },
+
+  "positioning": {
+    "core_problem": "",
+    "differentiator": [],
+    "core_promise": ""
+  },
+
+  "products": [],
+
+  "content_strategy": {
+    "content_mix": {},
+    "pillars": [],
+    "primary_goal": "",
+    "conversion_goal": ""
+  },
+
+  "style": {
+    "tone": [],
+    "visual_mood": [],
+    "avoid": []
+  },
+
+  "content_rules": {},
+
+  "production_defaults": {
+    "aspect_ratio": "9:16",
+    "baseline_format": "simple",
+    "supported_complexity_levels": [
+      "simple",
+      "standard",
+      "advanced"
+    ]
+  }
+}

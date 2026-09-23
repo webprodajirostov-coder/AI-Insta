@@ -3,18 +3,24 @@
   "entity": "ProductionProfile",
 
   "profile_id": "simple",
+  "version": 1,
+  "status": "active",
 
   "description": "",
 
   "visual": {
     "count": 1,
-    "type": "image_or_video",
+    "count_max": 1,
+    "types": [
+      "image"
+    ],
     "generation_required": false
   },
 
   "audio": {
     "tts": false,
-    "music": true
+    "music": true,
+    "voiceover_required": false
   },
 
   "text": {
@@ -28,7 +34,7 @@
     "animation": "minimal"
   },
 
-  "target_duration_seconds": {
+  "duration_seconds": {
     "min": 6,
     "max": 10
   },

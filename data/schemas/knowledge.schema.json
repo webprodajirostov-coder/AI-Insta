@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "entity": "Knowledge",
+
+  "knowledge_id": "sales_psychology_001_knowledge",
+  "account_id": "sales_psychology_001",
+  "version": 1,
+  "status": "active",
+
+  "core_concepts": [],
+  "audience_insights": [],
+  "psychological_mechanisms": [],
+
+  "messaging": {
+    "key_messages": [],
+    "beliefs_to_challenge": [],
+    "beliefs_to_reinforce": []
+  },
+
+  "content_patterns": {
+    "successful": [],
+    "failed": [],
+    "unvalidated": []
+  },
+
+  "hooks": {
+    "proven": [],
+    "experimental": []
+  },
+
+  "content_pillars": [],
+
+  "competitor_insights": [],
+  "market_insights": [],
+  "performance_learnings": [],
+  "research_log": [],
+
+  "metadata": {}
+}
