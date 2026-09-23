@@ -106,5 +106,62 @@ class JobCreatorDomainIntegrationTests(unittest.TestCase):
             )
 
 
+class ResearchReferenceIntegrationTests(unittest.TestCase):
+    def _validate(self, idea, concept, research_insights):
+        validate_content_chain(
+            account=self.account,
+            knowledge=self.knowledge,
+            idea=idea,
+            concept=concept,
+            scenario=self.scenario,
+            profile=self.profile,
+            research_insights=research_insights,
+        )
+
+    def test_accepts_valid_research_reference(self):
+        insight = {
+            "insight_id": "insight_001",
+            "account_id": "sales_psychology_001",
+            "status": "ready",
+            "source": {"type": "competitor_video", "reference": "video_001"},
+            "topic": "pricing objections",
+            "observation": "Pricing fear is often framed through rejection avoidance.",
+            "evidence": ["Repeated pattern in analyzed source material."],
+            "relevance": "Useful for pricing anxiety content.",
+            "content_implications": ["Explore rejection avoidance as a content angle."],
+            "confidence": 0.8,
+        }
+        idea = dict(self.idea)
+        idea["research_refs"] = ["insight_001"]
+
+        self._validate(idea, self.concept, {"insight_001": insight})
+
+    def test_rejects_unknown_research_reference(self):
+        idea = dict(self.idea)
+        idea["research_refs"] = ["missing_insight"]
+
+        with self.assertRaises(DomainValidationError):
+            self._validate(idea, self.concept, {})
+
+    def test_rejects_cross_account_research_insight(self):
+        insight = {
+            "insight_id": "insight_001",
+            "account_id": "other_account",
+            "status": "ready",
+            "source": {"type": "competitor_video", "reference": "video_001"},
+            "topic": "pricing objections",
+            "observation": "Pricing fear is often framed through rejection avoidance.",
+            "evidence": ["Repeated pattern in analyzed source material."],
+            "relevance": "Useful for pricing anxiety content.",
+            "content_implications": ["Explore rejection avoidance as a content angle."],
+            "confidence": 0.8,
+        }
+        concept = dict(self.concept)
+        concept["research_refs"] = ["insight_001"]
+
+        with self.assertRaises(DomainValidationError):
+            self._validate(concept, concept, {"insight_001": insight})
+
+
 if __name__ == "__main__":
     unittest.main()
