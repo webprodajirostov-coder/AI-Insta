@@ -39,6 +39,50 @@ def validate_knowledge(
             )
 
 
+def validate_research_insight(
+    insight: Mapping[str, Any],
+    *,
+    account_id: str | None = None,
+) -> None:
+    insight_id = _require(insight, "insight_id", "ResearchInsight")
+    actual_account_id = _require(insight, "account_id", "ResearchInsight")
+
+    if account_id is not None and actual_account_id != account_id:
+        raise DomainValidationError(
+            f"ResearchInsight {insight_id} belongs to account "
+            f"{actual_account_id!r}, expected {account_id!r}"
+        )
+
+    _require(insight, "status", "ResearchInsight")
+    _require(insight, "source", "ResearchInsight")
+    _require(insight, "topic", "ResearchInsight")
+    _require(insight, "observation", "ResearchInsight")
+    _require(insight, "evidence", "ResearchInsight")
+    _require(insight, "relevance", "ResearchInsight")
+    _require(insight, "content_implications", "ResearchInsight")
+
+    evidence = insight["evidence"]
+    if not isinstance(evidence, list):
+        raise DomainValidationError(
+            f"ResearchInsight {insight_id} evidence must be a list"
+        )
+
+    implications = insight["content_implications"]
+    if not isinstance(implications, list):
+        raise DomainValidationError(
+            f"ResearchInsight {insight_id} content_implications must be a list"
+        )
+
+    confidence = insight.get("confidence")
+    if confidence is not None and (
+        not isinstance(confidence, (int, float)) or isinstance(confidence, bool)
+        or not 0 <= confidence <= 1
+    ):
+        raise DomainValidationError(
+            f"ResearchInsight {insight_id} confidence must be between 0 and 1"
+        )
+
+
 def validate_content_idea(
     idea: Mapping[str, Any],
     *,
@@ -184,6 +228,32 @@ def validate_knowledge_refs(
         )
 
 
+def validate_research_refs(
+    entity: Mapping[str, Any],
+    research_insights: Mapping[str, Mapping[str, Any]] | list[Mapping[str, Any]],
+    *,
+    label: str,
+) -> None:
+    refs = entity.get("research_refs", [])
+    if not isinstance(refs, list):
+        raise DomainValidationError(f"{label}.research_refs must be a list")
+
+    if isinstance(research_insights, Mapping):
+        known = research_insights
+    else:
+        known = {
+            insight.get("insight_id"): insight
+            for insight in research_insights
+            if isinstance(insight, Mapping) and insight.get("insight_id")
+        }
+
+    missing = [ref for ref in refs if ref not in known]
+    if missing:
+        raise DomainValidationError(
+            f"{label} references unknown ResearchInsight ids: {missing}"
+        )
+
+
 def validate_content_chain(
     *,
     account: Mapping[str, Any],
@@ -192,6 +262,9 @@ def validate_content_chain(
     concept: Mapping[str, Any],
     scenario: Mapping[str, Any],
     profile: Mapping[str, Any],
+    research_insights: Mapping[str, Mapping[str, Any]]
+    | list[Mapping[str, Any]]
+    | None = None,
 ) -> None:
     account_id = _require(account, "account_id", "Account")
     idea_id = _require(idea, "idea_id", "ContentIdea")
@@ -237,3 +310,24 @@ def validate_content_chain(
 
     validate_knowledge_refs(idea, knowledge, label="ContentIdea")
     validate_knowledge_refs(concept, knowledge, label="ContentConcept")
+
+    if research_insights is None:
+        if idea.get("research_refs") or concept.get("research_refs"):
+            raise DomainValidationError(
+                "ResearchInsight references are present but research_insights "
+                "were not provided for validation"
+            )
+    else:
+        for insight in (
+            research_insights.values()
+            if isinstance(research_insights, Mapping)
+            else research_insights
+        ):
+            validate_research_insight(insight, account_id=account_id)
+
+        validate_research_refs(
+            idea, research_insights, label="ContentIdea"
+        )
+        validate_research_refs(
+            concept, research_insights, label="ContentConcept"
+        )
