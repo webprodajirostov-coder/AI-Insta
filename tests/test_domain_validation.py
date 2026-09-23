@@ -106,7 +106,7 @@ class JobCreatorDomainIntegrationTests(unittest.TestCase):
             )
 
 
-class ResearchReferenceIntegrationTests(unittest.TestCase):
+class ResearchReferenceIntegrationTests(DomainValidationTests):
     def _validate(self, idea, concept, research_insights):
         validate_content_chain(
             account=self.account,
