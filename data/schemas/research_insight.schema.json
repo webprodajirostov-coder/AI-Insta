@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "entity": "ResearchInsight",
+
+  "insight_id": "insight_001",
+  "account_id": "sales_psychology_001",
+
+  "status": "draft",
+
+  "source": {
+    "type": "competitor_video",
+    "reference": "",
+    "title": "",
+    "url": ""
+  },
+
+  "topic": "",
+  "observation": "",
+
+  "evidence": [],
+
+  "relevance": "",
+
+  "content_implications": [],
+
+  "confidence": 0.0,
+
+  "created_at": "",
+  "updated_at": ""
+}
