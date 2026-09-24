@@ -670,13 +670,28 @@ def validate_content_chain(
         account_id=account_id,
         idea_id=idea_id,
     )
-    validate_scenario(
-        scenario,
-        account_id=account_id,
-        concept_id=concept_id,
-        production_profile=profile,
-    )
     validate_production_profile(profile)
+
+    schema_version = scenario.get("schema_version")
+    if schema_version == 2:
+        validate_scenario_v2(
+            scenario,
+            profile,
+            account_id=account_id,
+            concept_id=concept_id,
+        )
+    elif schema_version is None or schema_version == 1:
+        validate_scenario(
+            scenario,
+            account_id=account_id,
+            concept_id=concept_id,
+            production_profile=profile,
+        )
+    else:
+        raise DomainValidationError(
+            f"Scenario {scenario.get('scenario_id', '<unknown>')} uses "
+            f"unsupported schema_version={schema_version!r}"
+        )
 
     idea_profile = idea["production"]["profile"]
     concept_profile = concept["production_profile"]
