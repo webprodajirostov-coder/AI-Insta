@@ -33,19 +33,26 @@ class ScenarioGeneratorTests(unittest.TestCase):
             "title": "The Hidden Reason You Undercharge",
             "hook": "You might not be undercharging because you're modest.",
             "caption": "Sometimes the lower price is about safety.",
-            "visual": {
-                "type": "image",
-                "generation_required": False,
-                "prompt_en": "Cinematic vertical portrait.",
-            },
-            "text_overlay": {
-                "text": "The hidden reason",
-                "position": "center",
-                "animation": "minimal",
-            },
-            "audio": {"tts": False, "music": True},
-            "subtitles": {"enabled": False},
             "duration_seconds": 8,
+            "scenes": [
+                {
+                    "scene_id": "scene_001",
+                    "order": 1,
+                    "duration_seconds": 8,
+                    "voiceover_text": "",
+                    "visual": {
+                        "type": "image",
+                        "generation_required": False,
+                        "prompt_en": "Cinematic vertical portrait.",
+                    },
+                    "text_overlay": {
+                        "text": "The hidden reason",
+                        "position": "center",
+                        "animation": "minimal",
+                    },
+                    "subtitles": None,
+                }
+            ],
             "assembly": {
                 "transitions": False,
                 "animation": "minimal",
@@ -64,10 +71,12 @@ class ScenarioGeneratorTests(unittest.TestCase):
         )
 
         scenario = result.scenarios[0]
+        self.assertEqual(scenario["schema_version"], 2)
         self.assertEqual(scenario["account_id"], "sales_psychology_001")
         self.assertEqual(scenario["concept_id"], "concept_001")
         self.assertEqual(scenario["production_profile"], "simple")
         self.assertEqual(scenario["scenario_id"], "scenario_001")
+        self.assertEqual(len(scenario["scenes"]), 1)
 
     def test_rejects_cross_account_concept(self):
         concept = dict(self.concept)
@@ -103,7 +112,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
 
     def test_rejects_provider_profile_mismatch(self):
         provider = StubScenarioProvider(
-            [{"production_profile": "advanced"}]
+            [{"production_profile": "advanced", **self._valid()}]
         )
 
         with self.assertRaises(DomainValidationError):
@@ -144,11 +153,14 @@ class ScenarioGeneratorTests(unittest.TestCase):
             ScenarioGenerator(
                 StubScenarioProvider([
                     self._valid(
-                        visual={
-                            "type": "ai_video",
-                            "generation_required": True,
-                            "prompt_en": "test",
-                        }
+                        scenes=[{
+                            **self._valid()["scenes"][0],
+                            "visual": {
+                                "type": "ai_video",
+                                "generation_required": True,
+                                "prompt_en": "test",
+                            },
+                        }]
                     )
                 ])
             ).generate(
@@ -157,11 +169,16 @@ class ScenarioGeneratorTests(unittest.TestCase):
                 production_profile=self.profile,
             )
 
-    def test_rejects_audio_mismatch(self):
+    def test_rejects_subtitles_when_profile_disables_them(self):
         with self.assertRaises(DomainValidationError):
             ScenarioGenerator(
                 StubScenarioProvider([
-                    self._valid(audio={"tts": True, "music": True})
+                    self._valid(
+                        scenes=[{
+                            **self._valid()["scenes"][0],
+                            "subtitles": {"text": "Not allowed"},
+                        }]
+                    )
                 ])
             ).generate(
                 account=self.account,
