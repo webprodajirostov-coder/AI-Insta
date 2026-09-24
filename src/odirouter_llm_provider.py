@@ -41,6 +41,25 @@ class ODIRouterLLMProvider:
         self.timeout = timeout
         self._post = post or requests.post
 
+    @staticmethod
+    def _parse_json_content(raw_content: str) -> Any:
+        content = raw_content.strip()
+
+        if content.startswith("```"):
+            lines = content.splitlines()
+
+            if lines and lines[0].strip().startswith("```"):
+                lines = lines[1:]
+
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+
+            content = "\n".join(lines).strip()
+
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("ODIRouter returned invalid JSON") from exc
     def generate_structured(
         self,
         *,
@@ -89,8 +108,5 @@ class ODIRouterLLMProvider:
         if not isinstance(raw_content, str):
             raise RuntimeError("ODIRouter message content must be a string")
 
-        try:
-            return json.loads(raw_content.strip())
-        except json.JSONDecodeError as exc:
-            raise RuntimeError("ODIRouter returned invalid JSON") from exc
+        return self._parse_json_content(raw_content)
 
