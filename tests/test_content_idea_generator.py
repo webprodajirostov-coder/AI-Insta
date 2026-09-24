@@ -121,6 +121,28 @@ class ContentIdeaGeneratorTests(unittest.TestCase):
                 research_insights=[self.insight],
             )
 
+    def test_rejects_unknown_content_pillar(self):
+        broken = dict(self.idea)
+        broken["content_pillar"] = "Unknown Pillar"
+
+        with self.assertRaises(DomainValidationError):
+            ContentIdeaGenerator(StubContentIdeaProvider([broken])).generate(
+                account=self.account,
+                knowledge=self.knowledge,
+                research_insights=[self.insight],
+            )
+
+    def test_requires_research_reference_when_research_is_provided(self):
+        broken = dict(self.idea)
+        broken["research_refs"] = []
+
+        with self.assertRaises(DomainValidationError):
+            ContentIdeaGenerator(StubContentIdeaProvider([broken])).generate(
+                account=self.account,
+                knowledge=self.knowledge,
+                research_insights=[self.insight],
+            )
+
     def test_rejects_creative_production_fields(self):
         broken = dict(self.idea)
         broken["hook"] = "You are undercharging."
