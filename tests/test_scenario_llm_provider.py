@@ -82,7 +82,7 @@ class ScenarioLLMProviderTests(unittest.TestCase):
         self.assertIn("CONTENT CONCEPT", llm.calls[0]["user_prompt"])
         self.assertIn("PRODUCTION PROFILE", llm.calls[0]["user_prompt"])
         self.assertIn("Scenario v2", llm.calls[0]["system_prompt"])
-        self.assertNotIn("audio", llm.calls[0]["system_prompt"])
+        self.assertIn("Do not add a Scenario-level audio object", llm.calls[0]["system_prompt"])
 
     def test_adapter_passes_direct_sequence_result(self):
         provider = LLMScenarioProvider(FakeLLM([self.valid]))
