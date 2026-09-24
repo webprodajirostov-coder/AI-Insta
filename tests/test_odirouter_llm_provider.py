@@ -61,6 +61,32 @@ class ODIRouterLLMProviderTests(unittest.TestCase):
         self.assertEqual(kwargs["timeout"], 12)
         self.assertIn("RESPONSE SCHEMA", kwargs["json"]["messages"][1]["content"])
 
+    def test_provider_parses_markdown_json_fence(self):
+        def fake_post(url, **kwargs):
+            return FakeResponse(
+                payload={
+                    "choices": [
+                        {
+                            "message": {
+                                "content": "```json\\n{\"status\":\"ok\",\"provider\":\"odirouter\"}\\n```",
+                            }
+                        }
+                    ]
+                }
+            )
+
+        provider = ODIRouterLLMProvider(api_key="test-key", post=fake_post)
+
+        result = provider.generate_structured(
+            system_prompt="system",
+            user_prompt="user",
+        )
+
+        self.assertEqual(
+            result,
+            {"status": "ok", "provider": "odirouter"},
+        )
+
     def test_provider_rejects_missing_api_key(self):
         with self.assertRaises(ValueError):
             ODIRouterLLMProvider(api_key="")
