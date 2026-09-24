@@ -103,12 +103,24 @@ class ContentIdeaGenerator:
             validate_content_idea(idea, account_id=account_id)
             validate_knowledge_refs(idea, knowledge, label="ContentIdea")
 
+            content_pillars = account.get("content_strategy", {}).get("pillars", [])
+            if content_pillars and idea["content_pillar"] not in content_pillars:
+                raise DomainValidationError(
+                    f"ContentIdea {idea['idea_id']} uses unknown account content pillar: "
+                    f"{idea['content_pillar']!r}"
+                )
+
             if insights:
                 validate_research_refs(
                     idea,
                     insights,
                     label="ContentIdea",
                 )
+                if not idea["research_refs"]:
+                    raise DomainValidationError(
+                        f"ContentIdea {idea['idea_id']} must reference at least one "
+                        "ResearchInsight when research insights are provided"
+                    )
 
             ideas.append(idea)
 
