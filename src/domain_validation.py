@@ -14,6 +14,43 @@ def _require(entity: Mapping[str, Any], field: str, label: str) -> Any:
     return value
 
 
+def validate_research_analysis(
+    analysis: Mapping[str, Any],
+    *,
+    research_id: str | None = None,
+    account_id: str | None = None,
+) -> None:
+    actual_research_id = _require(
+        analysis, "research_id", "ResearchAnalysisResult"
+    )
+    actual_account_id = _require(
+        analysis, "account_id", "ResearchAnalysisResult"
+    )
+
+    if research_id is not None and actual_research_id != research_id:
+        raise DomainValidationError(
+            f"ResearchAnalysisResult belongs to research "
+            f"{actual_research_id!r}, expected {research_id!r}"
+        )
+
+    if account_id is not None and actual_account_id != account_id:
+        raise DomainValidationError(
+            f"ResearchAnalysisResult belongs to account "
+            f"{actual_account_id!r}, expected {account_id!r}"
+        )
+
+    _require(analysis, "summary", "ResearchAnalysisResult")
+
+    for field in ("patterns", "observations"):
+        value = _require(analysis, field, "ResearchAnalysisResult")
+        if not isinstance(value, list) or any(
+            not isinstance(item, str) for item in value
+        ):
+            raise DomainValidationError(
+                f"ResearchAnalysisResult {field} must be a list of strings"
+            )
+
+
 def validate_account(account: Mapping[str, Any]) -> None:
     _require(account, "account_id", "Account")
     _require(account, "version", "Account")
