@@ -339,10 +339,14 @@ def run_audio_stage(job_dir):
 
     job = load_job(job_dir)
     scenario = load_json(job_dir / "content" / "scenario.json")
-    audio_config = scenario.get("audio", {})
+    profile_name = scenario["production_profile"]
+    profile = load_json(
+        Path("data/production_profiles") / f"{profile_name}.json"
+    )
+    audio_config = profile["audio"]
 
-    music_enabled = audio_config.get("music", False)
-    tts_enabled = audio_config.get("tts", False)
+    music_enabled = audio_config["music"]
+    tts_enabled = audio_config["tts"]
 
     if not music_enabled and not tts_enabled:
         print("AUDIO STAGE: nothing enabled")
@@ -389,7 +393,7 @@ def run_audio_stage(job_dir):
 
         generate_mock_music(
             job_dir,
-            duration_seconds=scenario.get("duration_seconds", 8),
+            duration_seconds=scenario["duration_seconds"],
         )
 
         ready = [
@@ -532,7 +536,11 @@ def dry_run_pipeline(job_dir):
 
     # AUDIO STAGE
     scenario = load_json(job_dir / "content" / "scenario.json")
-    music_enabled = scenario.get("audio", {}).get("music", False)
+    profile_name = scenario["production_profile"]
+    profile = load_json(
+        Path("data/production_profiles") / f"{profile_name}.json"
+    )
+    music_enabled = profile["audio"]["music"]
 
     if music_enabled:
         from src.audio_resolver import resolve_audio_asset
