@@ -13,7 +13,7 @@ from src.llm_provider import LLMProvider
 ODIROUTER_URL = "https://api.odirouter.ai/v1/chat/completions"
 
 
-class ODIrouterLLMProvider:
+class ODIRouterLLMProvider:
     """Concrete LLMProvider for ODIRouter's OpenAI-compatible chat API."""
 
     def __init__(
@@ -94,10 +94,3 @@ class ODIrouterLLMProvider:
         except json.JSONDecodeError as exc:
             raise RuntimeError("ODIRouter returned invalid JSON") from exc
 
-
-# Backwards-compatible spelling alias for callers that prefer the acronym form.
-ODIRouterLLMProvider = ODIrouterLLMProvider
-
-def _assert_provider_contract() -> None:
-    """Keep the concrete adapter's intended dependency explicit for type checkers."""
-    _: LLMProvider
