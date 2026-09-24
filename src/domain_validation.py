@@ -97,8 +97,58 @@ def validate_content_idea(
             f"{actual_account_id!r}, expected {account_id!r}"
         )
 
-    _require(idea, "production", "ContentIdea")
-    _require(idea["production"], "profile", "ContentIdea.production")
+    for field in (
+        "status",
+        "source",
+        "topic",
+        "content_pillar",
+        "funnel_stage",
+        "angle",
+        "audience_problem",
+        "audience_desire",
+        "hook_direction",
+        "why_now",
+        "knowledge_refs",
+        "research_refs",
+        "production",
+    ):
+        _require(idea, field, "ContentIdea")
+
+    source = idea["source"]
+    if not isinstance(source, Mapping):
+        raise DomainValidationError(
+            f"ContentIdea {idea_id} source must be an object"
+        )
+
+    source_ids = _require(source, "source_ids", f"ContentIdea {idea_id}.source")
+    if not isinstance(source_ids, list):
+        raise DomainValidationError(
+            f"ContentIdea {idea_id} source.source_ids must be a list"
+        )
+
+    for field in ("knowledge_refs", "research_refs"):
+        refs = idea[field]
+        if not isinstance(refs, list):
+            raise DomainValidationError(
+                f"ContentIdea {idea_id} {field} must be a list"
+            )
+
+    priority = idea.get("priority")
+    if priority is not None and (
+        not isinstance(priority, (int, float)) or isinstance(priority, bool)
+        or priority < 0
+    ):
+        raise DomainValidationError(
+            f"ContentIdea {idea_id} priority must be a non-negative number"
+        )
+
+    production = idea["production"]
+    if not isinstance(production, Mapping):
+        raise DomainValidationError(
+            f"ContentIdea {idea_id} production must be an object"
+        )
+
+    _require(production, "profile", "ContentIdea.production")
 
 
 def validate_content_concept(
