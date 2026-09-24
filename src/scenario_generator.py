@@ -90,7 +90,10 @@ class ScenarioGenerator:
             scenario.setdefault("concept_id", concept["concept_id"])
             scenario.setdefault("production_profile", profile_id)
             scenario.setdefault("status", "draft")
-            scenario.setdefault("language", account.get("identity", {}).get("language", "en"))
+            scenario.setdefault(
+                "language",
+                account.get("identity", {}).get("language", "en"),
+            )
             scenario.setdefault("created_at", now)
             scenario.setdefault("updated_at", now)
 
@@ -116,6 +119,7 @@ class ScenarioGenerator:
                 scenario,
                 account_id=account_id,
                 concept_id=concept["concept_id"],
+                production_profile=production_profile,
             )
             generated.append(scenario)
 
