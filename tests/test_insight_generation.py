@@ -211,6 +211,39 @@ class InsightGenerationTests(unittest.TestCase):
             insights[0].observation.lower(),
         )
 
+    def test_generator_owns_research_provenance(self):
+        class WrongProvenanceProvider:
+            def generate(self, *args):
+                return [
+                    {
+                        "insight_id": "insight_001",
+                        "account_id": "sales_psychology_001",
+                        "status": "draft",
+                        "source": {"reference": "research_999"},
+                        "topic": "pricing objections",
+                        "observation": "Observation",
+                        "evidence": ["Evidence"],
+                        "relevance": "Relevant",
+                        "content_implications": ["Implication"],
+                        "confidence": 0.8,
+                    }
+                ]
+
+        generator = InsightGenerator(WrongProvenanceProvider())
+
+        insights = generator.generate(
+            RESEARCH_RECORD,
+            ANALYSIS,
+            ACCOUNT,
+            KNOWLEDGE,
+        )
+
+        self.assertEqual(len(insights), 1)
+        self.assertEqual(
+            insights[0].source["reference"],
+            RESEARCH_RECORD["research_id"],
+        )
+
     def test_invalid_confidence_is_rejected(self):
         class InvalidConfidenceProvider:
             def generate(self, *args):
