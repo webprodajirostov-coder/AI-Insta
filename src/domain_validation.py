@@ -220,6 +220,7 @@ def validate_scenario(
     *,
     account_id: str | None = None,
     concept_id: str | None = None,
+    production_profile: Mapping[str, Any] | None = None,
 ) -> None:
     scenario_id = _require(scenario, "scenario_id", "Scenario")
     actual_account_id = _require(scenario, "account_id", "Scenario")
@@ -237,7 +238,114 @@ def validate_scenario(
             f"{actual_concept_id!r}, expected {concept_id!r}"
         )
 
-    _require(scenario, "production_profile", "Scenario")
+    scenario_profile_id = _require(
+        scenario, "production_profile", "Scenario"
+    )
+
+    if production_profile is None:
+        return
+
+    validate_production_profile(production_profile)
+    profile_id = production_profile["profile_id"]
+    if scenario_profile_id != profile_id:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} uses ProductionProfile "
+            f"{scenario_profile_id!r}, expected {profile_id!r}"
+        )
+
+    duration = _require(scenario, "duration_seconds", f"Scenario {scenario_id}")
+    if (
+        not isinstance(duration, (int, float))
+        or isinstance(duration, bool)
+        or duration <= 0
+    ):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} duration_seconds must be a positive number"
+        )
+
+    duration_bounds = production_profile["duration_seconds"]
+    if duration < duration_bounds["min"] or duration > duration_bounds["max"]:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} duration_seconds {duration} is outside "
+            f"ProductionProfile {profile_id} range "
+            f"{duration_bounds['min']}–{duration_bounds['max']}"
+        )
+
+    visual = _require(scenario, "visual", f"Scenario {scenario_id}")
+    if not isinstance(visual, Mapping):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} visual must be an object"
+        )
+
+    visual_type = _require(visual, "type", f"Scenario {scenario_id}.visual")
+    if visual_type not in production_profile["visual"]["types"]:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} visual type {visual_type!r} is not supported "
+            f"by ProductionProfile {profile_id}"
+        )
+
+    generation_required = visual.get("generation_required")
+    profile_generation_required = production_profile["visual"].get(
+        "generation_required"
+    )
+    if profile_generation_required is True and generation_required is not True:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} must require visual generation for "
+            f"ProductionProfile {profile_id}"
+        )
+
+    audio = _require(scenario, "audio", f"Scenario {scenario_id}")
+    if not isinstance(audio, Mapping):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} audio must be an object"
+        )
+
+    profile_audio = production_profile["audio"]
+    for field in ("tts", "music"):
+        if field in profile_audio and audio.get(field) != profile_audio[field]:
+            raise DomainValidationError(
+                f"Scenario {scenario_id} audio.{field}={audio.get(field)!r} "
+                f"does not match ProductionProfile {profile_id} "
+                f"requirement {profile_audio[field]!r}"
+            )
+
+    subtitles = _require(scenario, "subtitles", f"Scenario {scenario_id}")
+    if not isinstance(subtitles, Mapping):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} subtitles must be an object"
+        )
+
+    profile_text = production_profile["text"]
+    if profile_text.get("subtitles") is True and subtitles.get("enabled") is not True:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} must enable subtitles for "
+            f"ProductionProfile {profile_id}"
+        )
+
+    assembly = _require(scenario, "assembly", f"Scenario {scenario_id}")
+    if not isinstance(assembly, Mapping):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} assembly must be an object"
+        )
+
+    profile_editing = production_profile["editing"]
+    if (
+        "transitions" in profile_editing
+        and assembly.get("transitions") != profile_editing["transitions"]
+    ):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} assembly.transitions={assembly.get('transitions')!r} "
+            f"does not match ProductionProfile {profile_id}"
+        )
+
+    if (
+        "animation" in profile_editing
+        and assembly.get("animation") != profile_editing["animation"]
+    ):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} assembly.animation={assembly.get('animation')!r} "
+            f"does not match ProductionProfile {profile_id}"
+        )
 
 
 def validate_production_profile(profile: Mapping[str, Any]) -> None:
@@ -372,6 +480,7 @@ def validate_content_chain(
         scenario,
         account_id=account_id,
         concept_id=concept_id,
+        production_profile=profile,
     )
     validate_production_profile(profile)
 
