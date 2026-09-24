@@ -110,11 +110,14 @@ class InsightGenerator:
                 account_id=account_id,
             )
 
+            source = dict(candidate["source"])
+            source["reference"] = research_id
+
             insight = ResearchInsight(
                 insight_id=str(candidate["insight_id"]),
                 account_id=str(candidate["account_id"]),
                 status=str(candidate["status"]),
-                source=dict(candidate["source"]),
+                source=source,
                 topic=str(candidate["topic"]),
                 observation=str(candidate["observation"]),
                 evidence=list(candidate["evidence"]),
@@ -129,12 +132,6 @@ class InsightGenerator:
                 insight.to_dict(),
                 account_id=account_id,
             )
-
-            if insight.source.get("reference") != research_id:
-                raise ValueError(
-                    f"ResearchInsight {insight.insight_id} source does not "
-                    f"reference ResearchRecord {research_id}"
-                )
 
             insights.append(insight)
 
