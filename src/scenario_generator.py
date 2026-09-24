@@ -9,7 +9,7 @@ from src.domain_validation import (
     validate_account,
     validate_content_concept,
     validate_production_profile,
-    validate_scenario,
+    validate_scenario_v2,
 )
 
 
@@ -33,7 +33,7 @@ class ScenarioGenerationResult:
 
 
 class ScenarioGenerator:
-    """Generate production-ready Scenario contracts from a ContentConcept."""
+    """Generate production-ready Scenario v2 contracts from a ContentConcept."""
 
     def __init__(self, provider: ScenarioProvider):
         self.provider = provider
@@ -83,7 +83,7 @@ class ScenarioGenerator:
                 )
 
             scenario = dict(raw)
-            scenario.setdefault("schema_version", 1)
+            scenario.setdefault("schema_version", 2)
             scenario.setdefault("entity", "Scenario")
             scenario.setdefault("scenario_id", f"scenario_{index:03d}")
             scenario.setdefault("account_id", account_id)
@@ -115,11 +115,11 @@ class ScenarioGenerator:
                     f"{scenario['production_profile']!r}, expected {profile_id!r}"
                 )
 
-            validate_scenario(
+            validate_scenario_v2(
                 scenario,
+                production_profile,
                 account_id=account_id,
                 concept_id=concept["concept_id"],
-                production_profile=production_profile,
             )
             generated.append(scenario)
 
