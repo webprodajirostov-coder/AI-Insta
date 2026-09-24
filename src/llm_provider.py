@@ -12,5 +12,5 @@ class LLMProvider(Protocol):
         system_prompt: str,
         user_prompt: str,
         response_schema: Mapping[str, Any] | None = None,
-    ) -> Mapping[str, Any]:
+    ) -> Any:
         ...
