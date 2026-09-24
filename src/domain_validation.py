@@ -348,6 +348,200 @@ def validate_scenario(
         )
 
 
+
+def validate_scenario_v2(
+    scenario: Mapping[str, Any],
+    profile: Mapping[str, Any],
+    *,
+    account_id: str | None = None,
+    concept_id: str | None = None,
+) -> None:
+    """Validate the Scenario v2 structural contract against its profile."""
+
+    validate_scenario(
+        scenario,
+        account_id=account_id,
+        concept_id=concept_id,
+    )
+
+    scenario_id = scenario["scenario_id"]
+
+    if scenario.get("schema_version") != 2:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} must use schema_version=2"
+        )
+
+    for field in (
+        "status",
+        "language",
+        "title",
+        "hook",
+        "caption",
+        "duration_seconds",
+        "scenes",
+        "assembly",
+    ):
+        _require(scenario, field, "Scenario")
+
+    duration = scenario["duration_seconds"]
+    if not isinstance(duration, (int, float)) or isinstance(duration, bool):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} duration_seconds must be numeric"
+        )
+
+    profile_duration = profile["duration_seconds"]
+    minimum = profile_duration["min"]
+    maximum = profile_duration["max"]
+
+    if not minimum <= duration <= maximum:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} duration_seconds={duration} is outside "
+            f"ProductionProfile {profile['profile_id']} bounds "
+            f"{minimum}..{maximum}"
+        )
+
+    scenes = scenario["scenes"]
+    if not isinstance(scenes, list) or not scenes:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} scenes must be a non-empty list"
+        )
+
+    orders: list[int] = []
+
+    for index, scene in enumerate(scenes, start=1):
+        label = f"Scenario {scenario_id} Scene[{index}]"
+
+        if not isinstance(scene, Mapping):
+            raise DomainValidationError(f"{label} must be an object")
+
+        for field in (
+            "scene_id",
+            "order",
+            "duration_seconds",
+            "voiceover_text",
+            "visual",
+            "text_overlay",
+            "subtitles",
+        ):
+            if field not in scene:
+                raise DomainValidationError(
+                    f"{label} is missing required field: {field}"
+                )
+
+        order = scene["order"]
+        if not isinstance(order, int) or isinstance(order, bool) or order < 1:
+            raise DomainValidationError(
+                f"{label}.order must be a positive integer"
+            )
+        orders.append(order)
+
+        scene_duration = scene["duration_seconds"]
+        if (
+            not isinstance(scene_duration, (int, float))
+            or isinstance(scene_duration, bool)
+            or scene_duration <= 0
+        ):
+            raise DomainValidationError(
+                f"{label}.duration_seconds must be a positive number"
+            )
+
+        voiceover_text = scene["voiceover_text"]
+        if not isinstance(voiceover_text, str):
+            raise DomainValidationError(
+                f"{label}.voiceover_text must be a string"
+            )
+
+        visual = scene["visual"]
+        if not isinstance(visual, Mapping):
+            raise DomainValidationError(f"{label}.visual must be an object")
+
+        for field in ("type", "generation_required"):
+            if field not in visual:
+                raise DomainValidationError(
+                    f"{label}.visual is missing required field: {field}"
+                )
+
+        visual_type = visual["type"]
+        if visual_type not in profile["visual"]["types"]:
+            raise DomainValidationError(
+                f"{label}.visual.type={visual_type!r} is not allowed by "
+                f"ProductionProfile {profile['profile_id']}"
+            )
+
+        if not isinstance(visual["generation_required"], bool):
+            raise DomainValidationError(
+                f"{label}.visual.generation_required must be boolean"
+            )
+
+        prompt = visual.get("prompt_en")
+        if prompt is not None and not isinstance(prompt, str):
+            raise DomainValidationError(
+                f"{label}.visual.prompt_en must be a string or null"
+            )
+
+        text_overlay = scene["text_overlay"]
+        if text_overlay is not None:
+            if not isinstance(text_overlay, Mapping):
+                raise DomainValidationError(
+                    f"{label}.text_overlay must be an object or null"
+                )
+
+            for field in ("text", "position", "animation"):
+                if field not in text_overlay:
+                    raise DomainValidationError(
+                        f"{label}.text_overlay is missing required field: {field}"
+                    )
+
+        subtitles = scene["subtitles"]
+        if not profile["text"]["subtitles"] and subtitles is not None:
+            raise DomainValidationError(
+                f"{label}.subtitles must be null because "
+                f"ProductionProfile {profile['profile_id']} disables subtitles"
+            )
+
+        if profile["audio"]["tts"] and not voiceover_text.strip():
+            raise DomainValidationError(
+                f"{label}.voiceover_text is required because "
+                f"ProductionProfile {profile['profile_id']} requires TTS"
+            )
+
+    if sorted(orders) != list(range(1, len(scenes) + 1)):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} scene orders must be unique and contiguous "
+            f"starting at 1"
+        )
+
+    total_scene_duration = sum(scene["duration_seconds"] for scene in scenes)
+    if total_scene_duration != duration:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} duration_seconds={duration} does not "
+            f"match sum(Scene.duration_seconds)={total_scene_duration}"
+        )
+
+    assembly = scenario["assembly"]
+    if not isinstance(assembly, Mapping):
+        raise DomainValidationError(
+            f"Scenario {scenario_id} assembly must be an object"
+        )
+
+    for field in ("transitions", "animation"):
+        if field not in assembly:
+            raise DomainValidationError(
+                f"Scenario {scenario_id} assembly is missing required field: {field}"
+            )
+
+    if assembly["transitions"] != profile["editing"]["transitions"]:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} assembly.transitions does not match "
+            f"ProductionProfile {profile['profile_id']}"
+        )
+
+    if assembly["animation"] != profile["editing"]["animation"]:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} assembly.animation does not match "
+            f"ProductionProfile {profile['profile_id']}"
+        )
+
 def validate_production_profile(profile: Mapping[str, Any]) -> None:
     profile_id = _require(profile, "profile_id", "ProductionProfile")
     _require(profile, "status", "ProductionProfile")
