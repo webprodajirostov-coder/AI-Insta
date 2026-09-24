@@ -202,7 +202,10 @@ def validate_content_concept(
             f"ContentConcept {concept_id} cta must be an object"
         )
     _require(cta, "type", f"ContentConcept {concept_id}.cta")
-    _require(cta, "text", f"ContentConcept {concept_id}.cta")
+    if "text" not in cta:
+        raise DomainValidationError(
+            f"ContentConcept {concept_id}.cta is missing required field: text"
+        )
 
     for field in ("knowledge_refs", "research_refs"):
         refs = concept[field]
