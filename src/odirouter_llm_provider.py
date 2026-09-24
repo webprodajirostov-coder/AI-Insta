@@ -46,7 +46,7 @@ class ODIRouterLLMProvider:
         content = raw_content.strip()
 
         if content.startswith("```"):
-            lines = content.splitlines()
+            lines = content.splitlines()\n\n            if len(lines) == 1 and "\\n" in content:\n                lines = content.split("\\n")
 
             if lines and lines[0].strip().startswith("```"):
                 lines = lines[1:]
