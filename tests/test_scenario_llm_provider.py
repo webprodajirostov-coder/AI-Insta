@@ -41,19 +41,26 @@ class ScenarioLLMProviderTests(unittest.TestCase):
             "title": "The Hidden Reason You Undercharge",
             "hook": "You might not be undercharging because you're modest.",
             "caption": "Sometimes the lower price is about safety.",
-            "visual": {
-                "type": "image",
-                "generation_required": False,
-                "prompt_en": "Cinematic vertical portrait.",
-            },
-            "text_overlay": {
-                "text": "The hidden reason",
-                "position": "center",
-                "animation": "minimal",
-            },
-            "audio": {"tts": False, "music": True},
-            "subtitles": {"enabled": False},
             "duration_seconds": 8,
+            "scenes": [
+                {
+                    "scene_id": "scene_001",
+                    "order": 1,
+                    "duration_seconds": 8,
+                    "voiceover_text": "",
+                    "visual": {
+                        "type": "image",
+                        "generation_required": False,
+                        "prompt_en": "Cinematic vertical portrait.",
+                    },
+                    "text_overlay": {
+                        "text": "The hidden reason",
+                        "position": "center",
+                        "animation": "minimal",
+                    },
+                    "subtitles": None,
+                }
+            ],
             "assembly": {
                 "transitions": False,
                 "animation": "minimal",
@@ -74,6 +81,8 @@ class ScenarioLLMProviderTests(unittest.TestCase):
         self.assertEqual(len(llm.calls), 1)
         self.assertIn("CONTENT CONCEPT", llm.calls[0]["user_prompt"])
         self.assertIn("PRODUCTION PROFILE", llm.calls[0]["user_prompt"])
+        self.assertIn("Scenario v2", llm.calls[0]["system_prompt"])
+        self.assertNotIn("audio", llm.calls[0]["system_prompt"])
 
     def test_adapter_passes_direct_sequence_result(self):
         provider = LLMScenarioProvider(FakeLLM([self.valid]))
@@ -97,6 +106,7 @@ class ScenarioLLMProviderTests(unittest.TestCase):
 
         self.assertEqual(len(result.scenarios), 1)
         self.assertEqual(result.scenarios[0]["scenario_id"], "scenario_001")
+        self.assertEqual(result.scenarios[0]["schema_version"], 2)
 
     def test_adapter_rejects_invalid_llm_result(self):
         provider = LLMScenarioProvider(FakeLLM({"scenario": self.valid}))
@@ -107,3 +117,7 @@ class ScenarioLLMProviderTests(unittest.TestCase):
                 concept=self.concept,
                 production_profile=self.profile,
             )
+
+
+if __name__ == "__main__":
+    unittest.main()
