@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "entity": "ResearchAnalysisResult",
+  "research_id": "research_001",
+  "account_id": "sales_psychology_001",
+  "summary": "",
+  "patterns": [],
+  "observations": []
+}
