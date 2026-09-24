@@ -173,7 +173,43 @@ def validate_content_concept(
             f"{actual_idea_id!r}, expected {idea_id!r}"
         )
 
-    _require(concept, "production_profile", "ContentConcept")
+    for field in (
+        "status",
+        "core_message",
+        "problem",
+        "reframe",
+        "psychological_mechanism",
+        "key_points",
+        "hook",
+        "emotional_direction",
+        "audience_takeaway",
+        "cta",
+        "knowledge_refs",
+        "research_refs",
+        "production_profile",
+    ):
+        _require(concept, field, "ContentConcept")
+
+    key_points = concept["key_points"]
+    if not isinstance(key_points, list):
+        raise DomainValidationError(
+            f"ContentConcept {concept_id} key_points must be a list"
+        )
+
+    cta = concept["cta"]
+    if not isinstance(cta, Mapping):
+        raise DomainValidationError(
+            f"ContentConcept {concept_id} cta must be an object"
+        )
+    _require(cta, "type", f"ContentConcept {concept_id}.cta")
+    _require(cta, "text", f"ContentConcept {concept_id}.cta")
+
+    for field in ("knowledge_refs", "research_refs"):
+        refs = concept[field]
+        if not isinstance(refs, list):
+            raise DomainValidationError(
+                f"ContentConcept {concept_id} {field} must be a list"
+            )
 
 
 def validate_scenario(
