@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Mapping, Protocol
+from typing import Any, Mapping, Protocol, runtime_checkable
 
 
+@runtime_checkable
 class LLMProvider(Protocol):
     """Infrastructure contract for structured text generation."""
 
