@@ -24,7 +24,9 @@ Each object must follow the current Scenario v1 contract:
 - audio: object with tts and music
 - subtitles: object with enabled
 - duration_seconds: positive number within the supplied ProductionProfile bounds
-- assembly: object with transitions and animation
+- assembly: object with transitions (boolean) and animation (string)
+
+Use JSON primitive types exactly: booleans must be true/false, not arrays or strings. In particular, assembly.transitions, audio.tts, audio.music, subtitles.enabled, and visual.generation_required are booleans; assembly.animation, visual.type, and text_overlay.position/animation are strings.
 
 Respect the supplied Account language, ContentConcept, and ProductionProfile exactly.
 Do not invent account_id, concept_id, or production_profile values."""
