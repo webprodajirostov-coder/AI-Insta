@@ -40,6 +40,46 @@ class DomainValidationTests(unittest.TestCase):
             profile=self.profile,
         )
 
+    def test_validates_scenario_v2_content_chain(self):
+        scenario = dict(self.scenario)
+        for field in ("visual", "text_overlay", "audio", "subtitles"):
+            scenario.pop(field, None)
+
+        scenario.update(
+            {
+                "schema_version": 2,
+                "scenes": [
+                    {
+                        "scene_id": "scene_001",
+                        "order": 1,
+                        "duration_seconds": 8,
+                        "voiceover_text": "",
+                        "visual": {
+                            "type": "image",
+                            "generation_required": True,
+                            "prompt_en": "Test visual prompt",
+                        },
+                        "text_overlay": None,
+                        "subtitles": None,
+                    }
+                ],
+                "duration_seconds": 8,
+                "assembly": {
+                    "transitions": False,
+                    "animation": "minimal",
+                },
+            }
+        )
+
+        validate_content_chain(
+            account=self.account,
+            knowledge=self.knowledge,
+            idea=self.idea,
+            concept=self.concept,
+            scenario=scenario,
+            profile=self.profile,
+        )
+
     def test_rejects_cross_account_concept(self):
         broken = dict(self.concept)
         broken["account_id"] = "other_account"
