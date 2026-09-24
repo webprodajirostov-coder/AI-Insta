@@ -28,33 +28,36 @@ class ScenarioGeneratorTests(unittest.TestCase):
         self.concept = load_json(ROOT / "data" / "ideas" / "content_concept_001.json")
         self.profile = load_json(ROOT / "data" / "production_profiles" / "simple.json")
 
-    def test_generates_valid_scenario_from_concept(self):
-        provider = StubScenarioProvider(
-            [{
-                "title": "The Hidden Reason You Undercharge",
-                "hook": "You might not be undercharging because you're modest.",
-                "caption": "Sometimes the lower price is about safety.",
-                "visual": {
-                    "type": "image",
-                    "generation_required": True,
-                    "prompt_en": "Cinematic vertical portrait.",
-                },
-                "text_overlay": {
-                    "text": "The hidden reason",
-                    "position": "center",
-                    "animation": "minimal",
-                },
-                "audio": {"tts": False, "music": True},
-                "subtitles": {"enabled": False},
-                "duration_seconds": 8,
-                "assembly": {
-                    "transitions": False,
-                    "animation": "minimal",
-                },
-            }]
-        )
+    def _valid(self, **overrides):
+        scenario = {
+            "title": "The Hidden Reason You Undercharge",
+            "hook": "You might not be undercharging because you're modest.",
+            "caption": "Sometimes the lower price is about safety.",
+            "visual": {
+                "type": "image",
+                "generation_required": False,
+                "prompt_en": "Cinematic vertical portrait.",
+            },
+            "text_overlay": {
+                "text": "The hidden reason",
+                "position": "center",
+                "animation": "minimal",
+            },
+            "audio": {"tts": False, "music": True},
+            "subtitles": {"enabled": False},
+            "duration_seconds": 8,
+            "assembly": {
+                "transitions": False,
+                "animation": "minimal",
+            },
+        }
+        scenario.update(overrides)
+        return scenario
 
-        result = ScenarioGenerator(provider).generate(
+    def test_generates_valid_scenario_from_concept(self):
+        result = ScenarioGenerator(
+            StubScenarioProvider([self._valid()])
+        ).generate(
             account=self.account,
             concept=self.concept,
             production_profile=self.profile,
@@ -110,7 +113,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
                 production_profile=self.profile,
             )
 
-    def test_defaults_identity_fields(self):
+    def test_rejects_incomplete_scenario(self):
         provider = StubScenarioProvider(
             [{
                 "title": "Test",
@@ -119,17 +122,69 @@ class ScenarioGeneratorTests(unittest.TestCase):
             }]
         )
 
-        result = ScenarioGenerator(provider).generate(
-            account=self.account,
-            concept=self.concept,
-            production_profile=self.profile,
-        )
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(provider).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
 
-        scenario = result.scenarios[0]
-        self.assertEqual(scenario["entity"], "Scenario")
-        self.assertEqual(scenario["schema_version"], 1)
-        self.assertEqual(scenario["status"], "draft")
-        self.assertEqual(scenario["language"], "en")
+    def test_rejects_duration_outside_profile(self):
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(
+                StubScenarioProvider([self._valid(duration_seconds=11)])
+            ).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
+    def test_rejects_unsupported_visual_type(self):
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(
+                StubScenarioProvider([
+                    self._valid(
+                        visual={
+                            "type": "ai_video",
+                            "generation_required": True,
+                            "prompt_en": "test",
+                        }
+                    )
+                ])
+            ).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
+    def test_rejects_audio_mismatch(self):
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(
+                StubScenarioProvider([
+                    self._valid(audio={"tts": True, "music": True})
+                ])
+            ).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
+    def test_rejects_editing_mismatch(self):
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(
+                StubScenarioProvider([
+                    self._valid(
+                        assembly={
+                            "transitions": True,
+                            "animation": "dynamic",
+                        }
+                    )
+                ])
+            ).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
 
 
 if __name__ == "__main__":
