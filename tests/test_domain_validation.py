@@ -106,7 +106,10 @@ class JobCreatorDomainIntegrationTests(unittest.TestCase):
             )
 
 
-class ResearchReferenceIntegrationTests(DomainValidationTests):
+class ResearchReferenceIntegrationTests(unittest.TestCase):
+    def setUp(self):
+        DomainValidationTests.setUp(self)
+
     def _validate(self, idea, concept, research_insights):
         validate_content_chain(
             account=self.account,
@@ -160,7 +163,7 @@ class ResearchReferenceIntegrationTests(DomainValidationTests):
         concept["research_refs"] = ["insight_001"]
 
         with self.assertRaises(DomainValidationError):
-            self._validate(concept, concept, {"insight_001": insight})
+            self._validate(self.idea, concept, {"insight_001": insight})
 
 
 if __name__ == "__main__":
