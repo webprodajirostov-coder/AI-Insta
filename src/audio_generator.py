@@ -14,14 +14,17 @@ def generate_audio(job_dir, audio_type="tts", provider="mock"):
     job = load_json(job_dir / "job.json")
     scenario = load_json(job_dir / "content" / "scenario.json")
 
-    audio = scenario.get("audio", {})
+    profile_name = scenario["production_profile"]
+    profile_path = Path("data/production_profiles") / f"{profile_name}.json"
+    profile = load_json(profile_path)
+    audio = profile["audio"]
 
     if audio_type == "tts":
-        enabled = audio.get("tts", False)
+        enabled = audio["tts"]
         text = scenario.get("voiceover") or scenario.get("caption", "")
         voice = None
     elif audio_type == "music":
-        enabled = audio.get("music", False)
+        enabled = audio["music"]
         text = None
         voice = None
     else:
@@ -69,7 +72,11 @@ def generate_mock_music(job_dir, duration_seconds=8):
     job = load_json(job_dir / "job.json")
     scenario = load_json(job_dir / "content" / "scenario.json")
 
-    if not scenario.get("audio", {}).get("music", False):
+    profile_name = scenario["production_profile"]
+    profile_path = Path("data/production_profiles") / f"{profile_name}.json"
+    profile = load_json(profile_path)
+
+    if not profile["audio"]["music"]:
         print("AUDIO GENERATION: SKIPPED (music disabled)")
         return None
 
