@@ -1,5 +1,6 @@
 import unittest
 
+from src.domain_validation import DomainValidationError, validate_research_analysis
 from src.research_analysis import ResearchAnalysisResult, ResearchAnalyzer
 
 
@@ -42,7 +43,10 @@ class ResearchAnalysisTests(unittest.TestCase):
 
         self.assertEqual(result.research_id, "research_001")
         self.assertEqual(result.account_id, "sales_psychology_001")
-        self.assertEqual(result.observations[0], "The source frames pricing fear as avoidance of rejection.")
+        self.assertEqual(
+            result.observations[0],
+            "The source frames pricing fear as avoidance of rejection.",
+        )
 
     def test_rejects_cross_account_record(self):
         with self.assertRaises(ValueError):
@@ -63,6 +67,40 @@ class ResearchAnalysisTests(unittest.TestCase):
         self.assertNotIn("target_emotion", data)
         self.assertNotIn("hook", data)
         self.assertNotIn("cta", data)
+
+    def test_validates_result_shape(self):
+        result = ResearchAnalyzer(DeterministicProvider()).analyze(self.record)
+
+        validate_research_analysis(
+            result.to_dict(),
+            research_id="research_001",
+            account_id="sales_psychology_001",
+        )
+
+    def test_rejects_cross_account_analysis(self):
+        result = ResearchAnalyzer(DeterministicProvider()).analyze(self.record)
+
+        with self.assertRaises(DomainValidationError):
+            validate_research_analysis(
+                result.to_dict(),
+                account_id="other_account",
+            )
+
+    def test_rejects_non_string_pattern(self):
+        result = ResearchAnalyzer(DeterministicProvider()).analyze(self.record)
+        data = result.to_dict()
+        data["patterns"] = [123]
+
+        with self.assertRaises(DomainValidationError):
+            validate_research_analysis(data)
+
+    def test_rejects_missing_observations(self):
+        result = ResearchAnalyzer(DeterministicProvider()).analyze(self.record)
+        data = result.to_dict()
+        del data["observations"]
+
+        with self.assertRaises(DomainValidationError):
+            validate_research_analysis(data)
 
 
 if __name__ == "__main__":
