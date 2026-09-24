@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "entity": "ResearchRecord",
+
+  "research_id": "research_001",
+  "account_id": "sales_psychology_001",
+
+  "status": "completed",
+
+  "source": {
+    "type": "competitor_video",
+    "reference": "",
+    "title": "",
+    "url": ""
+  },
+
+  "raw_material": "",
+  "analysis": {
+    "summary": "",
+    "patterns": []
+  },
+
+  "created_at": "",
+  "updated_at": ""
+}

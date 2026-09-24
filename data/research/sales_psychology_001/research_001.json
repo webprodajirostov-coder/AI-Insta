@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "entity": "ResearchRecord",
+
+  "research_id": "research_001",
+  "account_id": "sales_psychology_001",
+
+  "status": "completed",
+
+  "source": {
+    "type": "competitor_video",
+    "reference": "video_001",
+    "title": "Pricing fear and rejection",
+    "url": ""
+  },
+
+  "raw_material": "Example research material used to validate the ResearchRecord storage boundary.",
+
+  "analysis": {
+    "summary": "The source material frames pricing hesitation through fear of rejection.",
+    "patterns": [
+      "Pricing hesitation is connected to perceived social risk.",
+      "The topic can be explored without turning the research record into a content concept."
+    ]
+  },
+
+  "created_at": "2026-09-24T00:00:00",
+  "updated_at": "2026-09-24T00:00:00"
+}

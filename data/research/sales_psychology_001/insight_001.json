@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "entity": "ResearchInsight",
+
+  "insight_id": "insight_001",
+  "account_id": "sales_psychology_001",
+
+  "status": "ready",
+
+  "source": {
+    "type": "competitor_video",
+    "reference": "research_001",
+    "title": "Pricing fear and rejection",
+    "url": ""
+  },
+
+  "topic": "pricing objections",
+  "observation": "Pricing fear can be framed as avoidance of rejection rather than simple modesty.",
+
+  "evidence": [
+    "The research record identifies a repeated connection between pricing hesitation and perceived social risk."
+  ],
+
+  "relevance": "This observation is relevant to the account's existing pricing and rejection themes.",
+
+  "content_implications": [
+    "Explore rejection avoidance as a content angle.",
+    "Keep the distinction between research observation and later creative framing."
+  ],
+
+  "confidence": 0.8,
+
+  "created_at": "2026-09-24T00:00:00",
+  "updated_at": "2026-09-24T00:00:00"
+}
