@@ -683,6 +683,16 @@ def run_pipeline(job_dir):
         # VISUAL
         # =========================
         active_stage = "visual"
+        job = load_job(job_dir)
+
+        # A failed stage is terminal for the normal pipeline run.
+        # Do not attempt a failed -> failed transition on rerun.
+        if job["pipeline"]["visual"] == "failed":
+            print("VISUAL: failed")
+            print("ACTION: SKIP — VISUAL STAGE ALREADY FAILED")
+            print("========================")
+            return False
+
         visual_action, visual_asset_id = resolve_visual_stage(job_dir)
 
         if visual_action == "ready":
