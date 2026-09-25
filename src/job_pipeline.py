@@ -693,7 +693,15 @@ def run_pipeline(job_dir):
 
         elif visual_action == "failed":
             update_stage(job_dir, "visual", "failed")
-            raise RuntimeError("Visual stage failed")
+            update_job_state(
+                job_dir,
+                status="failed",
+                error="Visual stage failed: generation is disabled and no ready VisualAsset exists",
+            )
+            print("VISUAL: failed")
+            print("JOB STATUS: failed")
+            print("========================")
+            return False
 
         # =========================
         # ASSEMBLY
