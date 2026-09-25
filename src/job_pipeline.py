@@ -179,8 +179,7 @@ def complete_job_after_output_validation(job_dir):
     for stage in ("concept", "scenario", "audio", "visual", "assembly"):
         if job["pipeline"][stage] != "completed":
             raise ValueError(
-                f"Cannot complete job: {stage} is "
-                f"{job['pipeline'][stage]}"
+                f"Cannot complete job: {stage} is {job['pipeline'][stage]}"
             )
 
     job["pipeline"]["output"] = "completed"
@@ -260,7 +259,26 @@ def resolve_visual_stage(job_dir):
             candidates.append((asset_path, asset))
 
     if not candidates:
+        scenario = load_json(job_dir / "content" / "scenario.json")
+        scenes = scenario.get("scenes", [])
+
+        if not scenes:
+            raise ValueError("Scenario has no scenes for visual stage")
+
+        if len(scenes) != 1:
+            raise ValueError(
+                "Simple visual stage currently supports exactly one scene"
+            )
+
+        generation_required = scenes[0]["visual"]["generation_required"]
+
         print("VISUAL STAGE: NO ASSET")
+
+        if not generation_required:
+            print("ACTION: STOP")
+            print("REASON: visual generation is not required and no asset exists")
+            return "failed", None
+
         print("ACTION: GENERATE")
         return "generate", None
 
@@ -525,6 +543,7 @@ def run_ready_pipeline(job_dir):
     print("=========================")
     return True
 
+
 def dry_run_pipeline(job_dir):
     job_dir = Path(job_dir)
 
@@ -582,8 +601,8 @@ def dry_run_pipeline(job_dir):
         print("VISUAL: ready")
         print("ACTION: SKIP GENERATION")
 
-    elif visual_action == "pending":
-        print("VISUAL: pending")
+    elif visual_action == "generate":
+        print("VISUAL: no asset")
         print("ACTION: WOULD GENERATE")
         print("PROVIDER: odirouter")
         print("MODEL: kling-v3-image")
@@ -599,6 +618,7 @@ def dry_run_pipeline(job_dir):
     print("DRY RUN: NO PROVIDER REQUEST SENT")
     print("============================")
     return True
+
 
 def run_pipeline(job_dir):
     job_dir = Path(job_dir)
@@ -741,6 +761,7 @@ def run_pipeline(job_dir):
         print("========================")
         return False
 
+
 def update_job_state(job_dir, status=None, output_path=None, error=None):
     job_dir = Path(job_dir)
     job_path = job_dir / "job.json"
@@ -799,20 +820,3 @@ def update_job_state(job_dir, status=None, output_path=None, error=None):
         json.dump(job, f, ensure_ascii=False, indent=2)
 
     return job
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) != 2:
-        print("Usage: python -m src.job_pipeline <job_dir>")
-        raise SystemExit(1)
-
-    job_dir = sys.argv[1]
-
-    try:
-        result = run_pipeline(job_dir)
-    except Exception as e:
-        print("PIPELINE ERROR:", e)
-        raise SystemExit(1)
-
-    raise SystemExit(0 if result else 1)
