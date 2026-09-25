@@ -626,6 +626,17 @@ def run_pipeline(job_dir):
     job = load_job(job_dir)
     validate_job(job)
 
+    # Terminal-state guard:
+    # a failed job is not rerun implicitly. Explicit retry semantics can be
+    # introduced separately without weakening normal lifecycle transitions.
+    if job.get("status") == "failed":
+        print("===== FULL PIPELINE =====")
+        print("JOB:", job["job_id"])
+        print("JOB STATUS: failed")
+        print("ACTION: SKIP — JOB ALREADY FAILED")
+        print("========================")
+        return False
+
     # Idempotency guard:
     # a completed job must not rewrite its state or rerun any stage.
     if job.get("status") == "completed":
