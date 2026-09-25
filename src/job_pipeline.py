@@ -820,3 +820,21 @@ def update_job_state(job_dir, status=None, output_path=None, error=None):
         json.dump(job, f, ensure_ascii=False, indent=2)
 
     return job
+
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) != 2:
+        print("Usage: python -m src.job_pipeline <job_dir>")
+        raise SystemExit(1)
+
+    job_dir = sys.argv[1]
+
+    try:
+        result = run_pipeline(job_dir)
+    except Exception as e:
+        print("PIPELINE ERROR:", e)
+        raise SystemExit(1)
+
+    raise SystemExit(0 if result else 1)
