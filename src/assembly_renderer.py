@@ -24,9 +24,21 @@ def render_assembly(job_dir):
     if plan.get("entity") != "AssemblyPlan":
         raise ValueError("Invalid AssemblyPlan entity")
 
-    visual_path = Path(
-        plan["inputs"]["visual"]["asset_path"]
-    )
+    if plan.get("schema_version") != 2:
+        raise ValueError("Renderer requires AssemblyPlan v2")
+
+    scenes = plan.get("scenes")
+    if not isinstance(scenes, list) or not scenes:
+        raise ValueError("AssemblyPlan has no scenes")
+
+    if len(scenes) != 1:
+        raise ValueError(
+            "Simple Renderer currently supports exactly one scene"
+        )
+
+    scene = scenes[0]
+
+    visual_path = Path(scene["visual"]["asset_path"])
 
     music_path = plan["inputs"]["audio"]["music"].get(
         "asset_path"
@@ -42,11 +54,12 @@ def render_assembly(job_dir):
             f"Music asset does not exist: {music_path}"
         )
 
-    duration = plan["settings"]["duration_seconds"]
+    duration = scene["duration_seconds"]
 
     output_path = Path(plan["output"]["path"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    print(f"RENDER SCENE: {scene['scene_id']}")
     print(f"RENDER VISUAL: {visual_path}")
     print(f"RENDER MUSIC:  {music_path}")
     print(f"RENDER OUTPUT: {output_path}")
