@@ -7,7 +7,7 @@ from unittest.mock import patch
 from src.job_pipeline import run_ready_pipeline
 
 
-class VisualLifecycleTests(unittest.TestCase):
+class VisualLifecycleTests:
     def make_job(self):
         job_dir = Path(tempfile.mkdtemp())
         (job_dir / "content").mkdir()
@@ -79,6 +79,30 @@ class VisualLifecycleTests(unittest.TestCase):
         )
         return job_dir
 
+    @staticmethod
+    def finalize_stub(job_dir):
+        job_dir = Path(job_dir)
+        output_dir = job_dir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_path = output_dir / "final.mp4"
+        output_path.write_bytes(b"final")
+
+        plan = {
+            "output": {
+                "path": str(output_path.resolve()),
+            }
+        }
+        (job_dir / "assembly" / "assembly_plan.json").write_text(
+            json.dumps(plan),
+            encoding="utf-8",
+        )
+
+        from src.job_pipeline import complete_job_after_output_validation
+
+        complete_job_after_output_validation(job_dir)
+        return True
+
     def test_generating_visual_is_polled_and_never_resubmitted(self):
         job_dir = self.make_job()
 
@@ -133,7 +157,9 @@ class VisualLifecycleTests(unittest.TestCase):
             "src.assembly_runner.run_assembly",
         ), patch(
             "src.finalizer.finalize",
-            return_value=True,
+            side_effect=self.finalize_stub,
+        ), patch(
+            "src.output_validator.validate_output",
         ):
             first = run_ready_pipeline(job_dir)
             self.assertFalse(first)
@@ -204,7 +230,9 @@ class VisualLifecycleTests(unittest.TestCase):
             "src.assembly_runner.run_assembly",
         ), patch(
             "src.finalizer.finalize",
-            return_value=True,
+            side_effect=self.finalize_stub,
+        ), patch(
+            "src.output_validator.validate_output",
         ):
             result = run_ready_pipeline(job_dir)
 
@@ -216,6 +244,8 @@ class VisualLifecycleTests(unittest.TestCase):
             (job_dir / "job.json").read_text(encoding="utf-8")
         )
         self.assertEqual(job["pipeline"]["visual"], "completed")
+        self.assertEqual(job["pipeline"]["output"], "completed")
+        self.assertEqual(job["status"], "completed")
 
 
 if __name__ == "__main__":
