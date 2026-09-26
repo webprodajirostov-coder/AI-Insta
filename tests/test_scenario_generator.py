@@ -30,6 +30,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
 
     def _valid(self, **overrides):
         scenario = {
+            "schema_version": 2,
             "title": "The Hidden Reason You Undercharge",
             "hook": "You might not be undercharging because you're modest.",
             "caption": "Sometimes the lower price is about safety.",
@@ -78,6 +79,41 @@ class ScenarioGeneratorTests(unittest.TestCase):
         self.assertEqual(scenario["scenario_id"], "scenario_001")
         self.assertEqual(len(scenario["scenes"]), 1)
 
+    def test_rejects_provider_missing_schema_version(self):
+        scenario = self._valid()
+        del scenario["schema_version"]
+
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(StubScenarioProvider([scenario])).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
+    def test_rejects_provider_v1_schema(self):
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(
+                StubScenarioProvider([self._valid(schema_version=1)])
+            ).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
+    def test_rejects_provider_v1_fields(self):
+        scenario = self._valid(
+            visual={"type": "image"},
+            audio={"tts": False, "music": True},
+            subtitles=None,
+        )
+
+        with self.assertRaises(DomainValidationError):
+            ScenarioGenerator(StubScenarioProvider([scenario])).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
     def test_rejects_cross_account_concept(self):
         concept = dict(self.concept)
         concept["account_id"] = "other_account"
@@ -125,6 +161,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
     def test_rejects_incomplete_scenario(self):
         provider = StubScenarioProvider(
             [{
+                "schema_version": 2,
                 "title": "Test",
                 "hook": "Test hook",
                 "production_profile": "simple",
