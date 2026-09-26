@@ -7,7 +7,7 @@ from unittest.mock import patch
 from src.job_pipeline import run_ready_pipeline
 
 
-class VisualLifecycleTests:
+class VisualLifecycleTests(unittest.TestCase):
     def make_job(self):
         job_dir = Path(tempfile.mkdtemp())
         (job_dir / "content").mkdir()
