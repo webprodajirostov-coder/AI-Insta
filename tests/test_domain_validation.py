@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from src.domain_validation import DomainValidationError, validate_content_chain
-from src.job_creator import create_job
+from src.job_service import create_job
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -228,7 +228,7 @@ class DomainValidationTests(unittest.TestCase):
 
 
 class JobCreatorDomainIntegrationTests(unittest.TestCase):
-    def test_job_creator_validates_and_creates_isolated_job(self):
+    def test_job_service_validates_and_creates_isolated_job(self):
         with tempfile.TemporaryDirectory() as tmp:
             job_dir = create_job(
                 ROOT / "data" / "ideas" / "content_idea_001.json",
