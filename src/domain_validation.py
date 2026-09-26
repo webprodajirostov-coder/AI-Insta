@@ -284,16 +284,6 @@ def validate_scenario(
             f"by ProductionProfile {profile_id}"
         )
 
-    generation_required = visual.get("generation_required")
-    profile_generation_required = production_profile["visual"].get(
-        "generation_required"
-    )
-    if profile_generation_required is True and generation_required is not True:
-        raise DomainValidationError(
-            f"Scenario {scenario_id} must require visual generation for "
-            f"ProductionProfile {profile_id}"
-        )
-
     audio = _require(scenario, "audio", f"Scenario {scenario_id}")
     if not isinstance(audio, Mapping):
         raise DomainValidationError(
@@ -517,10 +507,22 @@ def validate_scenario_v2(
                 f"ProductionProfile {profile['profile_id']} disables subtitles"
             )
 
+        if profile["text"]["subtitles"] and subtitles is None:
+            raise DomainValidationError(
+                f"{label}.subtitles is required because "
+                f"ProductionProfile {profile['profile_id']} enables subtitles"
+            )
+
         if profile["audio"]["tts"] and not voiceover_text.strip():
             raise DomainValidationError(
                 f"{label}.voiceover_text is required because "
                 f"ProductionProfile {profile['profile_id']} requires TTS"
+            )
+
+        if profile["audio"].get("voiceover_required") and not voiceover_text.strip():
+            raise DomainValidationError(
+                f"{label}.voiceover_text is required because "
+                f"ProductionProfile {profile['profile_id']} requires voiceover"
             )
 
     if sorted(orders) != list(range(1, len(scenes) + 1)):
