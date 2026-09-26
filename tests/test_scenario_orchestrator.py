@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.scenario_generator import ScenarioGenerationResult
+from src.scenario_generator import ScenarioGenerationResult, ScenarioGenerator
 from src.scenario_orchestrator import ScenarioOrchestrator
 
 
@@ -111,9 +111,9 @@ class ScenarioOrchestratorTests(unittest.TestCase):
             json.loads(self.concept_path.read_text(encoding="utf-8")),
             account_id="other_account",
         )
-        generator = StubScenarioGenerator(
-            ScenarioGenerationResult((self.scenario,))
-        )
+
+        provider = StubScenarioGenerator([self.scenario])
+        generator = ScenarioGenerator(provider)
         orchestrator = ScenarioOrchestrator(generator)
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -131,7 +131,7 @@ class ScenarioOrchestratorTests(unittest.TestCase):
                     output_path=output,
                 )
 
-            self.assertEqual(generator.calls, [])
+            self.assertEqual(provider.calls, [])
 
     def test_requires_at_least_one_generated_scenario(self):
         orchestrator, generator = self._orchestrator([])
