@@ -52,8 +52,8 @@ class DomainValidationTests(unittest.TestCase):
                     {
                         "scene_id": "scene_001",
                         "order": 1,
-                        "duration_seconds": 20,
-                        "voiceover_text": "Test voiceover",
+                        "duration_seconds": 8,
+                        "voiceover_text": "",
                         "visual": {
                             "type": "image",
                             "generation_required": True,
@@ -65,8 +65,8 @@ class DomainValidationTests(unittest.TestCase):
                 ],
                 "duration_seconds": 20,
                 "assembly": {
-                    "transitions": True,
-                    "animation": "moderate",
+                    "transitions": False,
+                    "animation": "minimal",
                 },
             }
         )
@@ -120,8 +120,8 @@ class DomainValidationTests(unittest.TestCase):
                     {
                         "scene_id": "scene_001",
                         "order": 1,
-                        "duration_seconds": 8,
-                        "voiceover_text": "",
+                        "duration_seconds": 20,
+                        "voiceover_text": "Test voiceover",
                         "visual": {
                             "type": "image",
                             "generation_required": True,
@@ -131,10 +131,10 @@ class DomainValidationTests(unittest.TestCase):
                         "subtitles": None,
                     },
                 ],
-                "duration_seconds": 8,
+                "duration_seconds": 20,
                 "assembly": {
-                    "transitions": False,
-                    "animation": "minimal",
+                    "transitions": True,
+                    "animation": "moderate",
                 },
             }
         )
