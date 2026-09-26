@@ -13,7 +13,7 @@ class LLMContentIdeaProvider:
 
 Generate exactly one ContentIdea object from the supplied Account, Knowledge, and optional ResearchInsight objects.
 
-Return ONLY a JSON array of ContentIdea objects. Do not return markdown or commentary.
+Return ONLY a JSON array containing exactly one ContentIdea object. Do not return markdown or commentary.
 
 Each ContentIdea must contain:
 - idea_id
