@@ -68,7 +68,8 @@ class ContentCreationOrchestrator:
             ideas = self._load_json(ideas_path).get("ideas", [])
             if len(ideas) != 1:
                 raise ValueError(
-                    "Content creation requires exactly one generated ContentIdea"
+                    "Content creation requires exactly one generated ContentIdea; "
+                    f"received {len(ideas)}"
                 )
             idea_path.write_text(
                 json.dumps(ideas[0], ensure_ascii=False, indent=2),
