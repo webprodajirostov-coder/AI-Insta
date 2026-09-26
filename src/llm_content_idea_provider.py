@@ -50,13 +50,30 @@ Do not turn research observations into established facts; preserve them as conte
         knowledge: Mapping[str, Any],
         research_insights: Sequence[Mapping[str, Any]],
     ) -> Sequence[Mapping[str, Any]]:
+        valid_knowledge_ref_ids = [
+            item["id"]
+            for key in (
+                "core_concepts",
+                "audience_insights",
+                "psychological_mechanisms",
+                "content_pillars",
+            )
+            for item in knowledge.get(key, [])
+            if isinstance(item, Mapping) and item.get("id")
+        ]
+
         user_prompt = (
             "ACCOUNT:\n"
             f"{dict(account)}\n\n"
+            "VALID KNOWLEDGE_REF IDS (use only these in knowledge_refs):\n"
+            f"{valid_knowledge_ref_ids}\n\n"
             "KNOWLEDGE:\n"
             f"{dict(knowledge)}\n\n"
             "RESEARCH INSIGHTS:\n"
-            f"{[dict(item) for item in research_insights]}"
+            f"{[dict(item) for item in research_insights]}\n\n"
+            "IMPORTANT: ids from hooks, content_patterns, messaging, or other "
+            "Knowledge sections are not valid knowledge_refs. Use only the "
+            "explicit VALID KNOWLEDGE_REF IDS list."
         )
 
         result = self.llm.generate_structured(
