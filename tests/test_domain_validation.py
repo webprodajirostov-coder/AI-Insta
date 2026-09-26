@@ -108,6 +108,110 @@ class DomainValidationTests(unittest.TestCase):
                 profile=self.profile,
             )
 
+    def test_rejects_scenario_visual_count_outside_profile(self):
+        scenario = dict(self.scenario)
+        for field in ("visual", "text_overlay", "audio", "subtitles"):
+            scenario.pop(field, None)
+
+        scenario.update(
+            {
+                "schema_version": 2,
+                "scenes": [
+                    {
+                        "scene_id": "scene_001",
+                        "order": 1,
+                        "duration_seconds": 8,
+                        "voiceover_text": "",
+                        "visual": {
+                            "type": "image",
+                            "generation_required": True,
+                            "prompt_en": "Test visual prompt",
+                        },
+                        "text_overlay": None,
+                        "subtitles": None,
+                    },
+                ],
+                "duration_seconds": 8,
+                "assembly": {
+                    "transitions": False,
+                    "animation": "minimal",
+                },
+            }
+        )
+
+        standard = load_json(
+            ROOT / "data" / "production_profiles" / "standard.json"
+        )
+        scenario["production_profile"] = "standard"
+
+        with self.assertRaises(DomainValidationError):
+            validate_content_chain(
+                account=self.account,
+                knowledge=self.knowledge,
+                idea=dict(self.idea, production={"profile": "standard"}),
+                concept=dict(self.concept, production_profile="standard"),
+                scenario=scenario,
+                profile=standard,
+            )
+
+    def test_rejects_non_mapping_subtitles_when_profile_requires_them(self):
+        scenario = dict(self.scenario)
+        for field in ("visual", "text_overlay", "audio", "subtitles"):
+            scenario.pop(field, None)
+
+        standard = load_json(
+            ROOT / "data" / "production_profiles" / "standard.json"
+        )
+        scenario.update(
+            {
+                "schema_version": 2,
+                "production_profile": "standard",
+                "scenes": [
+                    {
+                        "scene_id": "scene_001",
+                        "order": 1,
+                        "duration_seconds": 20,
+                        "voiceover_text": "Pricing fear is often about rejection.",
+                        "visual": {
+                            "type": "image",
+                            "generation_required": True,
+                            "prompt_en": "Test visual prompt",
+                        },
+                        "text_overlay": None,
+                        "subtitles": "invalid",
+                    },
+                    {
+                        "scene_id": "scene_002",
+                        "order": 2,
+                        "duration_seconds": 5,
+                        "voiceover_text": "You can work with that fear.",
+                        "visual": {
+                            "type": "image",
+                            "generation_required": True,
+                            "prompt_en": "Test visual prompt",
+                        },
+                        "text_overlay": None,
+                        "subtitles": {},
+                    },
+                ],
+                "duration_seconds": 25,
+                "assembly": {
+                    "transitions": True,
+                    "animation": "moderate",
+                },
+            }
+        )
+
+        with self.assertRaises(DomainValidationError):
+            validate_content_chain(
+                account=self.account,
+                knowledge=self.knowledge,
+                idea=dict(self.idea, production={"profile": "standard"}),
+                concept=dict(self.concept, production_profile="standard"),
+                scenario=scenario,
+                profile=standard,
+            )
+
     def test_rejects_unknown_knowledge_reference(self):
         broken = dict(self.idea)
         broken["knowledge_refs"] = list(self.idea["knowledge_refs"]) + ["missing_ref"]
