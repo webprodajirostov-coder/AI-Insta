@@ -127,6 +127,48 @@ class AssemblyPlanV2Tests(unittest.TestCase):
             )
             self.assertNotIn("visual", plan["inputs"])
 
+    def test_simple_renderer_rejects_visual_path_outside_job(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            job_dir = self._create_simple_job(Path(temp_dir))
+            plan = build_assembly_plan(job_dir)
+            plan["scenes"][0]["visual"]["asset_path"] = str(
+                Path(temp_dir).parent / "outside.png"
+            )
+
+            assembly_dir = job_dir / "assembly"
+            assembly_dir.mkdir(exist_ok=True)
+            (assembly_dir / "assembly_plan.json").write_text(
+                json.dumps(plan, indent=2),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "Visual asset path escapes job directory",
+            ):
+                render_assembly(job_dir)
+
+    def test_simple_renderer_rejects_output_path_outside_job(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            job_dir = self._create_simple_job(Path(temp_dir))
+            plan = build_assembly_plan(job_dir)
+            plan["output"]["path"] = str(
+                Path(temp_dir).parent / "outside.mp4"
+            )
+
+            assembly_dir = job_dir / "assembly"
+            assembly_dir.mkdir(exist_ok=True)
+            (assembly_dir / "assembly_plan.json").write_text(
+                json.dumps(plan, indent=2),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "Output path escapes job directory",
+            ):
+                render_assembly(job_dir)
+
     def test_simple_renderer_rejects_multiple_scenes(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             job_dir = self._create_simple_job(Path(temp_dir))
