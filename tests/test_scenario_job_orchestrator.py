@@ -87,6 +87,91 @@ class ScenarioJobOrchestratorTests(unittest.TestCase):
                 accounts_root="data/accounts",
             )
 
+    def test_full_content_concept_to_scenario_to_job_e2e(self):
+        generator = StubScenarioGenerator(
+            ScenarioGenerationResult(({
+                **self.scenario,
+                "scenes": [{
+                    "scene_id": "scene_001",
+                    "order": 1,
+                    "duration_seconds": 8,
+                    "voiceover_text": "",
+                    "visual": {
+                        "type": "image",
+                        "generation_required": True,
+                        "prompt_en": "Minimal cinematic business portrait.",
+                    },
+                    "text_overlay": None,
+                    "subtitles": None,
+                }],
+            },))
+        )
+        orchestrator = ScenarioJobOrchestrator(generator)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            scenario_output = tmp / "scenarios" / "scenario.json"
+            jobs_root = tmp / "jobs"
+
+            job_dir = orchestrator.generate_scenario_and_create_job(
+                content_idea_path=self.idea_path,
+                content_concept_path=self.concept_path,
+                production_profile_path=self.profile_path,
+                scenario_output_path=scenario_output,
+                jobs_root=jobs_root,
+            )
+
+            self.assertTrue(job_dir.is_dir())
+            self.assertTrue((job_dir / "job.json").is_file())
+            self.assertTrue((job_dir / "content" / "scenario.json").is_file())
+            self.assertFalse(
+                scenario_output.with_suffix(
+                    scenario_output.suffix + ".bundle"
+                ).exists()
+            )
+
+            job = json.loads(
+                (job_dir / "job.json").read_text(encoding="utf-8")
+            )
+            persisted_scenario = json.loads(
+                (job_dir / "content" / "scenario.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+            self.assertEqual(job["status"], "created")
+            self.assertEqual(job["account_id"], "sales_psychology_001")
+            self.assertEqual(
+                job["content"],
+                {
+                    "concept_id": "concept_001",
+                    "scenario_id": "scenario_001",
+                },
+            )
+            self.assertEqual(job["production"]["profile"], "simple")
+            self.assertEqual(
+                persisted_scenario["schema_version"],
+                2,
+            )
+            self.assertEqual(
+                persisted_scenario["concept_id"],
+                "concept_001",
+            )
+            self.assertEqual(
+                persisted_scenario["account_id"],
+                "sales_psychology_001",
+            )
+            self.assertEqual(
+                persisted_scenario["production_profile"],
+                "simple",
+            )
+            self.assertEqual(
+                persisted_scenario["scenes"][0]["visual"][
+                    "generation_required"
+                ],
+                True,
+            )
+
     def test_does_not_create_job_for_multiple_scenarios(self):
         generator = StubScenarioGenerator(
             ScenarioGenerationResult((self.scenario, self.scenario))
