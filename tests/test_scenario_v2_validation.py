@@ -64,6 +64,13 @@ class ScenarioV2ValidationTests(unittest.TestCase):
             "updated_at": "",
         }
 
+    def test_accepts_v2_without_v1_scenario_fields(self):
+        validate_scenario_v2(self.scenario, self.profile)
+
+        self.assertNotIn("visual", self.scenario)
+        self.assertNotIn("audio", self.scenario)
+        self.assertNotIn("subtitles", self.scenario)
+
     def test_accepts_valid_scenario_v2(self):
         validate_scenario_v2(self.scenario, self.profile)
 
