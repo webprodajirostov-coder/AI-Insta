@@ -11,7 +11,7 @@ class LLMContentIdeaProvider:
 
     SYSTEM_PROMPT = """You are a content strategist for an account-aware short-form content system.
 
-Generate one or more ContentIdea objects from the supplied Account, Knowledge, and optional ResearchInsight objects.
+Generate exactly one ContentIdea object from the supplied Account, Knowledge, and optional ResearchInsight objects.
 
 Return ONLY a JSON array of ContentIdea objects. Do not return markdown or commentary.
 
