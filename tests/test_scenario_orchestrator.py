@@ -117,6 +117,14 @@ class ScenarioOrchestratorTests(unittest.TestCase):
         orchestrator = ScenarioOrchestrator(generator)
 
         with tempfile.TemporaryDirectory() as tmp:
+            accounts_root = Path(tmp) / "accounts"
+            account_dir = accounts_root / "other_account"
+            account_dir.mkdir(parents=True)
+            (account_dir / "account.json").write_text(
+                self.account_path.read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+
             concept_path = Path(tmp) / "concept.json"
             output = Path(tmp) / "scenarios.json"
             concept_path.write_text(
@@ -129,6 +137,7 @@ class ScenarioOrchestratorTests(unittest.TestCase):
                     content_concept_path=concept_path,
                     production_profile_path=self.profile_path,
                     output_path=output,
+                    accounts_root=accounts_root,
                 )
 
             self.assertEqual(provider.calls, [])
