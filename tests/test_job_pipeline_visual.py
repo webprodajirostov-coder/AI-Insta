@@ -28,7 +28,7 @@ class VisualGenerationLifecycleTests(unittest.TestCase):
             "hook": "Test hook",
             "caption": "Test caption",
             "assembly": {
-                "transitions": false,
+                "transitions": False,
                 "animation": "minimal",
             },
             "duration_seconds": 8,
