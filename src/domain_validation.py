@@ -414,6 +414,21 @@ def validate_scenario_v2(
             f"Scenario {scenario_id} scenes must be a non-empty list"
         )
 
+    visual_count = sum(
+        1
+        for scene in scenes
+        if isinstance(scene, Mapping) and isinstance(scene.get("visual"), Mapping)
+    )
+    profile_visual_count = profile["visual"]["count"]
+    profile_visual_count_max = profile["visual"].get("count_max", profile_visual_count)
+
+    if not profile_visual_count <= visual_count <= profile_visual_count_max:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} contains {visual_count} visual scene(s), "
+            f"but ProductionProfile {profile['profile_id']} requires "
+            f"{profile_visual_count}..{profile_visual_count_max}"
+        )
+
     orders: list[int] = []
 
     for index, scene in enumerate(scenes, start=1):
@@ -501,6 +516,11 @@ def validate_scenario_v2(
                     )
 
         subtitles = scene["subtitles"]
+        if subtitles is not None and not isinstance(subtitles, Mapping):
+            raise DomainValidationError(
+                f"{label}.subtitles must be an object or null"
+            )
+
         if not profile["text"]["subtitles"] and subtitles is not None:
             raise DomainValidationError(
                 f"{label}.subtitles must be null because "
@@ -572,10 +592,22 @@ def validate_production_profile(profile: Mapping[str, Any]) -> None:
     _require(profile, "duration_seconds", "ProductionProfile")
 
     count = _require(visual, "count", f"ProductionProfile.visual ({profile_id})")
-    if not isinstance(count, int) or count < 1:
+    if not isinstance(count, int) or isinstance(count, bool) or count < 1:
         raise DomainValidationError(
             f"ProductionProfile {profile_id} visual.count must be a positive integer"
         )
+
+    count_max = visual.get("count_max")
+    if count_max is not None:
+        if (
+            not isinstance(count_max, int)
+            or isinstance(count_max, bool)
+            or count_max < count
+        ):
+            raise DomainValidationError(
+                f"ProductionProfile {profile_id} visual.count_max must be "
+                "an integer greater than or equal to visual.count"
+            )
 
     types = _require(visual, "types", f"ProductionProfile.visual ({profile_id})")
     if not isinstance(types, list) or not types:
