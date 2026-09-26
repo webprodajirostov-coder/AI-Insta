@@ -7,8 +7,7 @@
 
   "visual": {
     "count": 1,
-    "types": ["image", "video"],
-    "generation_required": false
+    "types": ["image", "video"]
   },
 
   "audio": {
