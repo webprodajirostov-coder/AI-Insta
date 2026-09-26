@@ -38,6 +38,7 @@ class ScenarioLLMProviderTests(unittest.TestCase):
         self.profile = load_json(ROOT / "data" / "production_profiles" / "simple.json")
 
         self.valid = {
+            "schema_version": 2,
             "title": "The Hidden Reason You Undercharge",
             "hook": "You might not be undercharging because you're modest.",
             "caption": "Sometimes the lower price is about safety.",
