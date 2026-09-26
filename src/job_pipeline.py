@@ -441,85 +441,15 @@ def run_audio_stage(job_dir):
 
 
 def run_ready_pipeline(job_dir):
-    job_dir = Path(job_dir)
-    job = load_job(job_dir)
-    validate_job(job)
+    """Run a production-ready Job through the canonical orchestrator.
 
-    if job.get("status") == "completed":
-        validate_completed_job(job_dir, job)
-        print("JOB: already completed")
-        return True
+    Kept as a compatibility entrypoint for callers of the historical
+    ready-pipeline API. Production orchestration lives exclusively in
+    PipelineOrchestrator.
+    """
+    from src.pipeline_orchestrator import PipelineOrchestrator
 
-    materialize_preproduction_stages(job_dir)
-
-    print("===== READY PIPELINE =====")
-
-    # AUDIO
-    if job["pipeline"]["audio"] == "completed":
-        print("AUDIO: already completed")
-    else:
-        audio_result = run_audio_stage(job_dir)
-
-        if audio_result == "completed":
-            update_stage(job_dir, "audio", "completed")
-            print("AUDIO: completed")
-        elif audio_result == "skipped":
-            update_stage(job_dir, "audio", "skipped")
-            print("AUDIO: skipped")
-        else:
-            raise RuntimeError(
-                f"Unsupported audio stage result: {audio_result}"
-            )
-
-    # VISUAL
-    visual_result = run_visual_stage(job_dir)
-
-    if visual_result == "waiting":
-        update_stage(job_dir, "visual", "waiting")
-        update_job_state(job_dir, status="waiting")
-        print("VISUAL: waiting for provider")
-        return False
-
-    job = load_job(job_dir)
-
-    if job["pipeline"]["visual"] == "completed":
-        print("VISUAL: already completed")
-    else:
-        update_stage(job_dir, "visual", "completed")
-        print("VISUAL: completed")
-
-    # ASSEMBLY
-    job = load_job(job_dir)
-
-    if job["pipeline"]["assembly"] == "completed":
-        print("ASSEMBLY: already completed")
-    else:
-        from src.assembly import build_assembly_plan
-        from src.assembly_runner import run_assembly
-
-        build_assembly_plan(job_dir)
-        run_assembly(job_dir)
-        update_stage(job_dir, "assembly", "completed")
-        print("ASSEMBLY: completed")
-
-    # OUTPUT
-    job = load_job(job_dir)
-
-    if job["pipeline"]["output"] == "completed":
-        print("OUTPUT: already completed; finalizing lifecycle")
-    else:
-        print("OUTPUT: finalizing")
-
-    from src.finalizer import finalize
-
-    if not finalize(job_dir):
-        return False
-
-    print("OUTPUT: completed")
-
-    print("=========================")
-    return True
-
+    return PipelineOrchestrator(job_dir).run()
 
 def dry_run_pipeline(job_dir):
     job_dir = Path(job_dir)
