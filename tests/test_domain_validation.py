@@ -63,7 +63,7 @@ class DomainValidationTests(unittest.TestCase):
                         "subtitles": None,
                     }
                 ],
-                "duration_seconds": 20,
+                "duration_seconds": 8,
                 "assembly": {
                     "transitions": False,
                     "animation": "minimal",
