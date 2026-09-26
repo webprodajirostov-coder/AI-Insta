@@ -13,7 +13,7 @@ class LLMContentConceptProvider:
 
 Turn the supplied ContentIdea into exactly one production-ready ContentConcept object.
 
-Return ONLY a JSON array of ContentConcept objects. Do not return markdown or commentary.
+Return ONLY a JSON array containing exactly one ContentConcept object. Do not return markdown or commentary.
 
 Each ContentConcept must contain:
 - concept_id
