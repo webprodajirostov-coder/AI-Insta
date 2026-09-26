@@ -358,13 +358,31 @@ def validate_scenario_v2(
 ) -> None:
     """Validate the Scenario v2 structural contract against its profile."""
 
-    validate_scenario(
-        scenario,
-        account_id=account_id,
-        concept_id=concept_id,
+    scenario_id = _require(scenario, "scenario_id", "Scenario")
+    actual_account_id = _require(scenario, "account_id", "Scenario")
+    actual_concept_id = _require(scenario, "concept_id", "Scenario")
+    scenario_profile_id = _require(
+        scenario, "production_profile", "Scenario"
     )
 
-    scenario_id = scenario["scenario_id"]
+    if account_id is not None and actual_account_id != account_id:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} belongs to account "
+            f"{actual_account_id!r}, expected {account_id!r}"
+        )
+
+    if concept_id is not None and actual_concept_id != concept_id:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} belongs to concept "
+            f"{actual_concept_id!r}, expected {concept_id!r}"
+        )
+
+    if scenario_profile_id != profile["profile_id"]:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} uses ProductionProfile "
+            f"{scenario_profile_id!r}, expected {profile['profile_id']!r}"
+        )
+
 
     if scenario.get("schema_version") != 2:
         raise DomainValidationError(
