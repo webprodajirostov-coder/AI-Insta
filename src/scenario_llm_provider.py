@@ -31,6 +31,7 @@ Each Scene must contain:
 - duration_seconds: positive number
 - voiceover_text: string; provide non-empty text when the ProductionProfile requires TTS
 - visual: object with type, generation_required, and prompt_en
+- For generated scenarios intended for downstream execution, set visual.generation_required=true so the execution pipeline knows the Scene requires a generated visual.
 - text_overlay: object with text, position, animation, or null
 - subtitles: object with actual subtitle data, or null when subtitles are disabled by the ProductionProfile
 
