@@ -15,13 +15,48 @@ def _require(entity: Mapping[str, Any], field: str, label: str) -> Any:
 
 
 def validate_account(account: Mapping[str, Any]) -> None:
-    _require(account, "account_id", "Account")
+    account_id = _require(account, "account_id", "Account")
     _require(account, "version", "Account")
     _require(account, "status", "Account")
-    _require(account, "identity", "Account")
-    _require(account, "audience", "Account")
-    _require(account, "content_strategy", "Account")
-    _require(account, "production_defaults", "Account")
+
+    for field in ("identity", "audience", "content_strategy", "production_defaults"):
+        value = _require(account, field, "Account")
+        if not isinstance(value, Mapping):
+            raise DomainValidationError(
+                f"Account {account_id} {field} must be an object"
+            )
+
+    pillars = account["content_strategy"].get("pillars", [])
+    if not isinstance(pillars, list):
+        raise DomainValidationError(
+            f"Account {account_id} content_strategy.pillars must be a list"
+        )
+    if any(not isinstance(pillar, str) or not pillar.strip() for pillar in pillars):
+        raise DomainValidationError(
+            f"Account {account_id} content_strategy.pillars must contain non-empty strings"
+        )
+
+    production = account["production_defaults"]
+    baseline = _require(production, "baseline_format", f"Account {account_id}.production_defaults")
+    if not isinstance(baseline, str) or not baseline.strip():
+        raise DomainValidationError(
+            f"Account {account_id} production_defaults.baseline_format must be a non-empty string"
+        )
+
+    supported = production.get("supported_complexity_levels")
+    if supported is not None:
+        if not isinstance(supported, list) or any(
+            not isinstance(level, str) or not level.strip() for level in supported
+        ):
+            raise DomainValidationError(
+                f"Account {account_id} production_defaults.supported_complexity_levels "
+                "must be a list of non-empty strings"
+            )
+        if supported and baseline not in supported:
+            raise DomainValidationError(
+                f"Account {account_id} baseline_format={baseline!r} is not included "
+                "in supported_complexity_levels"
+            )
 
 
 def validate_knowledge(
@@ -30,13 +65,45 @@ def validate_knowledge(
     account_id: str | None = None,
 ) -> None:
     knowledge_id = _require(knowledge, "knowledge_id", "Knowledge")
-    if account_id is not None:
-        actual_account_id = _require(knowledge, "account_id", "Knowledge")
-        if actual_account_id != account_id:
+    actual_account_id = _require(knowledge, "account_id", "Knowledge")
+
+    if account_id is not None and actual_account_id != account_id:
+        raise DomainValidationError(
+            f"Knowledge {knowledge_id} belongs to account "
+            f"{actual_account_id!r}, expected {account_id!r}"
+        )
+
+    collection_fields = (
+        "core_concepts",
+        "audience_insights",
+        "psychological_mechanisms",
+        "content_pillars",
+    )
+    seen_ids: set[str] = set()
+
+    for field in collection_fields:
+        value = knowledge.get(field, [])
+        if not isinstance(value, list):
             raise DomainValidationError(
-                f"Knowledge {knowledge_id} belongs to account "
-                f"{actual_account_id!r}, expected {account_id!r}"
+                f"Knowledge {knowledge_id} {field} must be a list"
             )
+
+        for index, item in enumerate(value):
+            label = f"Knowledge {knowledge_id} {field}[{index}]"
+            if not isinstance(item, Mapping):
+                raise DomainValidationError(f"{label} must be an object")
+
+            item_id = item.get("id")
+            if not isinstance(item_id, str) or not item_id.strip():
+                raise DomainValidationError(
+                    f"{label} must contain a non-empty id"
+                )
+
+            if item_id in seen_ids:
+                raise DomainValidationError(
+                    f"Knowledge {knowledge_id} contains duplicate item id: {item_id!r}"
+                )
+            seen_ids.add(item_id)
 
 
 def validate_research_insight(
@@ -284,16 +351,6 @@ def validate_scenario(
             f"by ProductionProfile {profile_id}"
         )
 
-    generation_required = visual.get("generation_required")
-    profile_generation_required = production_profile["visual"].get(
-        "generation_required"
-    )
-    if profile_generation_required is True and generation_required is not True:
-        raise DomainValidationError(
-            f"Scenario {scenario_id} must require visual generation for "
-            f"ProductionProfile {profile_id}"
-        )
-
     audio = _require(scenario, "audio", f"Scenario {scenario_id}")
     if not isinstance(audio, Mapping):
         raise DomainValidationError(
@@ -424,6 +481,21 @@ def validate_scenario_v2(
             f"Scenario {scenario_id} scenes must be a non-empty list"
         )
 
+    visual_count = sum(
+        1
+        for scene in scenes
+        if isinstance(scene, Mapping) and isinstance(scene.get("visual"), Mapping)
+    )
+    profile_visual_count = profile["visual"]["count"]
+    profile_visual_count_max = profile["visual"].get("count_max", profile_visual_count)
+
+    if not profile_visual_count <= visual_count <= profile_visual_count_max:
+        raise DomainValidationError(
+            f"Scenario {scenario_id} contains {visual_count} visual scene(s), "
+            f"but ProductionProfile {profile['profile_id']} requires "
+            f"{profile_visual_count}..{profile_visual_count_max}"
+        )
+
     orders: list[int] = []
 
     for index, scene in enumerate(scenes, start=1):
@@ -511,16 +583,33 @@ def validate_scenario_v2(
                     )
 
         subtitles = scene["subtitles"]
+        if subtitles is not None and not isinstance(subtitles, Mapping):
+            raise DomainValidationError(
+                f"{label}.subtitles must be an object or null"
+            )
+
         if not profile["text"]["subtitles"] and subtitles is not None:
             raise DomainValidationError(
                 f"{label}.subtitles must be null because "
                 f"ProductionProfile {profile['profile_id']} disables subtitles"
             )
 
+        if profile["text"]["subtitles"] and subtitles is None:
+            raise DomainValidationError(
+                f"{label}.subtitles is required because "
+                f"ProductionProfile {profile['profile_id']} enables subtitles"
+            )
+
         if profile["audio"]["tts"] and not voiceover_text.strip():
             raise DomainValidationError(
                 f"{label}.voiceover_text is required because "
                 f"ProductionProfile {profile['profile_id']} requires TTS"
+            )
+
+        if profile["audio"].get("voiceover_required") and not voiceover_text.strip():
+            raise DomainValidationError(
+                f"{label}.voiceover_text is required because "
+                f"ProductionProfile {profile['profile_id']} requires voiceover"
             )
 
     if sorted(orders) != list(range(1, len(scenes) + 1)):
@@ -570,10 +659,22 @@ def validate_production_profile(profile: Mapping[str, Any]) -> None:
     _require(profile, "duration_seconds", "ProductionProfile")
 
     count = _require(visual, "count", f"ProductionProfile.visual ({profile_id})")
-    if not isinstance(count, int) or count < 1:
+    if not isinstance(count, int) or isinstance(count, bool) or count < 1:
         raise DomainValidationError(
             f"ProductionProfile {profile_id} visual.count must be a positive integer"
         )
+
+    count_max = visual.get("count_max")
+    if count_max is not None:
+        if (
+            not isinstance(count_max, int)
+            or isinstance(count_max, bool)
+            or count_max < count
+        ):
+            raise DomainValidationError(
+                f"ProductionProfile {profile_id} visual.count_max must be "
+                "an integer greater than or equal to visual.count"
+            )
 
     types = _require(visual, "types", f"ProductionProfile.visual ({profile_id})")
     if not isinstance(types, list) or not types:
