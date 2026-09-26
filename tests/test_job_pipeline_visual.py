@@ -19,7 +19,18 @@ class VisualGenerationLifecycleTests(unittest.TestCase):
             "schema_version": 2,
             "entity": "Scenario",
             "scenario_id": "scenario_test",
+            "account_id": "account_test",
+            "concept_id": "concept_test",
             "production_profile": "simple",
+            "status": "ready",
+            "language": "en",
+            "title": "Test scenario",
+            "hook": "Test hook",
+            "caption": "Test caption",
+            "assembly": {
+                "transitions": false,
+                "animation": "minimal",
+            },
             "duration_seconds": 8,
             "scenes": [
                 {
