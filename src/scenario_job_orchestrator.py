@@ -55,7 +55,7 @@ class ScenarioJobOrchestrator:
         profile = self._load_json(production_profile_path)
 
         account_id = idea["account_id"]
-        account_path = accounts_root and Path(accounts_root) / account_id / "account.json"
+        account_path = Path(accounts_root) / account_id / "account.json"
         if not account_path.is_file():
             raise FileNotFoundError(f"Account not found: {account_path}")
 
