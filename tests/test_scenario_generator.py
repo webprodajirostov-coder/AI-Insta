@@ -43,7 +43,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
                     "voiceover_text": "",
                     "visual": {
                         "type": "image",
-                        "generation_required": False,
+                        "generation_required": True,
                         "prompt_en": "Cinematic vertical portrait.",
                     },
                     "text_overlay": {
@@ -243,3 +243,4 @@ class ScenarioGeneratorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
