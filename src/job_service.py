@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 5:
         print(
-            "Usage: python -m src.job_creator "
+            "Usage: python -m src.job_service "
             "<content_idea.json> "
             "<content_concept.json> "
             "<scenario.json> "
