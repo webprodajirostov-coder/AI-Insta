@@ -137,6 +137,17 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
             profile_path.write_text(json.dumps(profile), encoding="utf-8")
 
+            account_root = root / "accounts" / "account_001"
+            account_root.mkdir(parents=True)
+            (account_root / "account.json").write_text(
+                json.dumps(account),
+                encoding="utf-8",
+            )
+            (account_root / "knowledge.json").write_text(
+                json.dumps(knowledge),
+                encoding="utf-8",
+            )
+
             calls = []
 
             def pipeline_runner(job_dir):
