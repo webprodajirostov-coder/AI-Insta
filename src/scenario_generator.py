@@ -83,7 +83,20 @@ class ScenarioGenerator:
                 )
 
             scenario = dict(raw)
-            scenario.setdefault("schema_version", 2)
+
+            if scenario.get("schema_version") != 2:
+                raise DomainValidationError(
+                    f"Scenario provider item {index} must use schema_version=2"
+                )
+
+            forbidden_v1_fields = {"visual", "audio", "subtitles"} & scenario.keys()
+            if forbidden_v1_fields:
+                fields = ", ".join(sorted(forbidden_v1_fields))
+                raise DomainValidationError(
+                    f"Scenario provider item {index} contains forbidden "
+                    f"Scenario v1 fields: {fields}"
+                )
+
             scenario.setdefault("entity", "Scenario")
             scenario.setdefault("scenario_id", f"scenario_{index:03d}")
             scenario.setdefault("account_id", account_id)
