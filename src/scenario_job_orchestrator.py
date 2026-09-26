@@ -4,12 +4,12 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
-from src.job_creator import create_job
+from src.job_service import create_job
 from src.scenario_generator import ScenarioGenerator
 
 
 class ScenarioJobOrchestrator:
-    """Connect Scenario v2 generation with the existing execution job creator."""
+    """Connect Scenario v2 generation with the execution Job service."""
 
     def __init__(
         self,
