@@ -11,7 +11,7 @@ class LLMContentConceptProvider:
 
     SYSTEM_PROMPT = """You are a creative strategist for an account-aware short-form content system.
 
-Turn the supplied ContentIdea into one or more production-ready ContentConcept objects.
+Turn the supplied ContentIdea into exactly one production-ready ContentConcept object.
 
 Return ONLY a JSON array of ContentConcept objects. Do not return markdown or commentary.
 
