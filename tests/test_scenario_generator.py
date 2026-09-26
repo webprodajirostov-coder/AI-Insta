@@ -100,6 +100,28 @@ class ScenarioGeneratorTests(unittest.TestCase):
                 production_profile=self.profile,
             )
 
+    def test_rejects_provider_disabled_visual_generation(self):
+        scenario = self._valid(
+            scenes=[{
+                **self._valid()["scenes"][0],
+                "visual": {
+                    "type": "image",
+                    "generation_required": False,
+                    "prompt_en": "Cinematic vertical portrait.",
+                },
+            }]
+        )
+
+        with self.assertRaisesRegex(
+            DomainValidationError,
+            "generation_required=true",
+        ):
+            ScenarioGenerator(StubScenarioProvider([scenario])).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
     def test_rejects_provider_v1_fields(self):
         scenario = self._valid(
             visual={"type": "image"},
