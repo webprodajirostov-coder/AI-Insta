@@ -55,42 +55,48 @@ def build_assembly_plan(job_dir):
     profile = load_json(profile_path)
 
     scenes = scenario["scenes"]
-    if len(scenes) != 1:
-        raise ValueError(
-            "Current Simple Renderer vertical slice requires exactly one scene"
-        )
+    if not scenes:
+        raise ValueError("Scenario has no scenes")
 
-    scene = scenes[0]
-    visual = scene["visual"]
+    plan_scenes = []
+
+    for scene in scenes:
+        visual = scene["visual"]
+        visual_asset_id = find_asset_id(job_dir, visual["type"])
+        visual_asset_path = resolve_visual_asset(job_dir, visual_asset_id)
+
+        plan_scenes.append(
+            {
+                "scene_id": scene["scene_id"],
+                "order": scene["order"],
+                "duration_seconds": scene["duration_seconds"],
+                "voiceover_text": scene["voiceover_text"],
+                "visual": {
+                    "type": visual["type"],
+                    "generation_required": visual["generation_required"],
+                    "prompt_en": visual.get("prompt_en"),
+                    "asset_id": visual_asset_id,
+                    "asset_path": str(visual_asset_path),
+                },
+                "text_overlay": scene["text_overlay"],
+                "subtitles": scene["subtitles"],
+            }
+        )
 
     music_asset_path = None
     if profile["audio"]["music"]:
         music_asset_id = find_asset_id(job_dir, "music")
-        music_asset_path = str(
-            resolve_audio_asset(job_dir, music_asset_id)
-        )
-
-    visual_asset_id = find_asset_id(job_dir, visual["type"])
-    visual_asset_path = resolve_visual_asset(job_dir, visual_asset_id)
-
-    overlay = scene["text_overlay"]
-    overlay_text = overlay["text"] if overlay is not None else None
+        music_asset_path = str(resolve_audio_asset(job_dir, music_asset_id))
 
     plan = {
-        "schema_version": 1,
+        "schema_version": 2,
         "entity": "AssemblyPlan",
         "job_id": job["job_id"],
         "scenario_id": scenario["scenario_id"],
         "production_profile": profile["profile_id"],
         "language": scenario["language"],
+        "scenes": plan_scenes,
         "inputs": {
-            "visual": {
-                "type": visual["type"],
-                "generation_required": visual["generation_required"],
-                "prompt_en": visual.get("prompt_en"),
-                "asset_id": visual_asset_id,
-                "asset_path": str(visual_asset_path),
-            },
             "audio": {
                 "tts": {
                     "enabled": profile["audio"]["tts"],
@@ -103,7 +109,6 @@ def build_assembly_plan(job_dir):
             },
             "text": {
                 "hook": scenario["hook"],
-                "overlay": overlay_text,
                 "caption": scenario["caption"],
             },
         },
