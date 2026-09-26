@@ -37,6 +37,7 @@ Each Scene must contain:
 
 The sum of Scene.duration_seconds MUST equal Scenario.duration_seconds.
 Use only visual types allowed by the supplied ProductionProfile.
+When ProductionProfile.visual.count or visual.count_max are supplied, produce a number of scene-level visual directives within that range. In the current Scenario v2 contract, each Scene contains one visual directive.
 Match the ProductionProfile editing constraints exactly in assembly.transitions and assembly.animation.
 Do not add a Scenario-level audio object: audio requirements are defined by the ProductionProfile and voiceover_text belongs to each Scene.
 
