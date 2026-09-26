@@ -458,41 +458,18 @@ def run_ready_pipeline(job_dir):
     if job["pipeline"]["audio"] == "completed":
         print("AUDIO: already completed")
     else:
-        from src.audio_resolver import resolve_audio_asset
+        audio_result = run_audio_stage(job_dir)
 
-        assets_dir = job_dir / "media" / "audio"
-        candidates = []
-
-        for asset_path in assets_dir.glob("*.json"):
-            with open(asset_path, "r", encoding="utf-8") as f:
-                asset = json.load(f)
-
-            if asset.get("entity") == "AudioAsset":
-                candidates.append((asset_path, asset))
-
-        if not candidates:
-            raise FileNotFoundError(
-                f"No AudioAsset found in: {assets_dir}"
-            )
-
-        ready = [
-            item for item in candidates
-            if item[1].get("status") == "ready"
-        ]
-
-        if len(ready) == 1:
-            audio_asset = ready[0][1]
-        elif len(ready) > 1:
-            raise ValueError(
-                f"Multiple ready AudioAssets found: "
-                f"{[item[1].get('asset_id') for item in ready]}"
-            )
+        if audio_result == "completed":
+            update_stage(job_dir, "audio", "completed")
+            print("AUDIO: completed")
+        elif audio_result == "skipped":
+            update_stage(job_dir, "audio", "skipped")
+            print("AUDIO: skipped")
         else:
-            raise RuntimeError("No ready AudioAsset found")
-
-        resolve_audio_asset(job_dir, audio_asset["asset_id"])
-        update_stage(job_dir, "audio", "completed")
-        print("AUDIO: completed")
+            raise RuntimeError(
+                f"Unsupported audio stage result: {audio_result}"
+            )
 
     # VISUAL
     visual_result = run_visual_stage(job_dir)
