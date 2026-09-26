@@ -1,0 +1,80 @@
+from __future__ import annotations
+
+from typing import Any, Mapping, Sequence
+
+from src.domain_validation import DomainValidationError
+from src.llm_provider import LLMProvider
+
+
+class LLMContentConceptProvider:
+    """ContentConceptProvider adapter backed by a generic structured LLM."""
+
+    SYSTEM_PROMPT = """You are a creative strategist for an account-aware short-form content system.
+
+Turn the supplied ContentIdea into one or more production-ready ContentConcept objects.
+
+Return ONLY a JSON array of ContentConcept objects. Do not return markdown or commentary.
+
+Each ContentConcept must contain:
+- concept_id
+- core_message
+- problem
+- reframe
+- psychological_mechanism
+- key_points: array
+- hook
+- emotional_direction
+- audience_takeaway
+- cta: object with type and text
+- knowledge_refs
+- research_refs
+- production_profile
+
+Keep ContentConcept above the media-production layer. Do NOT include:
+caption, voiceover, visual, audio, scenario, or scenes.
+
+Preserve the ContentIdea account_id and idea_id.
+Preserve its knowledge_refs, research_refs, and production profile unless there is a clear validation-safe reason not to.
+Use only references supplied by the input.
+Do not invent research evidence or present a research observation as established fact."""
+    
+    def __init__(self, llm: LLMProvider):
+        self.llm = llm
+
+    def generate_content_concepts(
+        self,
+        *,
+        account: Mapping[str, Any],
+        knowledge: Mapping[str, Any],
+        idea: Mapping[str, Any],
+        research_insights: Sequence[Mapping[str, Any]],
+    ) -> Sequence[Mapping[str, Any]]:
+        user_prompt = (
+            "ACCOUNT:\n"
+            f"{dict(account)}\n\n"
+            "KNOWLEDGE:\n"
+            f"{dict(knowledge)}\n\n"
+            "CONTENT IDEA:\n"
+            f"{dict(idea)}\n\n"
+            "RESEARCH INSIGHTS:\n"
+            f"{[dict(item) for item in research_insights]}"
+        )
+
+        result = self.llm.generate_structured(
+            system_prompt=self.SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+        )
+
+        if isinstance(result, Mapping) and "concepts" in result:
+            concepts = result["concepts"]
+        else:
+            concepts = result
+
+        if isinstance(concepts, (str, bytes, Mapping)) or not isinstance(
+            concepts, Sequence
+        ):
+            raise DomainValidationError(
+                "LLMContentConceptProvider must receive a sequence of concept objects"
+            )
+
+        return concepts
