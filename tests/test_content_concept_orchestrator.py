@@ -90,7 +90,9 @@ class ContentConceptOrchestratorTests(unittest.TestCase):
         return path
 
     def _orchestrator(self, concepts=None):
-        provider = StubProvider(concepts or [self.concept])
+        if concepts is None:
+            concepts = [self.concept]
+        provider = StubProvider(concepts)
         return ContentConceptOrchestrator(ContentConceptGenerator(provider)), provider
 
     def test_loads_inputs_calls_generator_and_persists_result(self):
