@@ -3,7 +3,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.domain_validation import DomainValidationError, validate_content_chain
+from src.domain_validation import (
+    DomainValidationError,
+    validate_account,
+    validate_content_chain,
+    validate_knowledge,
+)
 from src.job_service import create_job
 
 
@@ -29,6 +34,42 @@ class DomainValidationTests(unittest.TestCase):
         self.profile = load_json(
             ROOT / "data" / "production_profiles" / "simple.json"
         )
+
+    def test_account_contract_requires_object_sections(self):
+        broken = dict(self.account)
+        broken["identity"] = "invalid"
+
+        with self.assertRaises(DomainValidationError):
+            validate_account(broken)
+
+    def test_account_contract_requires_supported_baseline(self):
+        broken = dict(self.account)
+        broken["production_defaults"] = dict(
+            self.account["production_defaults"],
+            baseline_format="unknown",
+            supported_complexity_levels=["simple", "standard"],
+        )
+
+        with self.assertRaises(DomainValidationError):
+            validate_account(broken)
+
+    def test_knowledge_contract_requires_account_and_collections(self):
+        broken = dict(self.knowledge)
+        broken.pop("account_id")
+        with self.assertRaises(DomainValidationError):
+            validate_knowledge(broken, account_id=self.account["account_id"])
+
+    def test_knowledge_contract_rejects_duplicate_reference_ids(self):
+        broken = dict(self.knowledge)
+        broken["audience_insights"] = list(self.knowledge["audience_insights"]) + [
+            dict(self.knowledge["core_concepts"][0])
+        ]
+
+        with self.assertRaises(DomainValidationError):
+            validate_knowledge(
+                broken,
+                account_id=self.account["account_id"],
+            )
 
     def test_valid_content_chain(self):
         validate_content_chain(
