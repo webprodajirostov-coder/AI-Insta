@@ -19,7 +19,7 @@ class VisualAssetResolutionTests(unittest.TestCase):
         )
 
         for index, asset in enumerate(assets or [], start=1):
-            asset_id = asset.get("asset_id", f"visual_{index:03d}")
+            asset_id = asset["asset_id"] if "asset_id" in asset else f"visual_{index:03d}"
             asset = {
                 "entity": "VisualAsset",
                 "asset_id": asset_id,
@@ -97,7 +97,7 @@ class VisualAssetResolutionTests(unittest.TestCase):
             ]
         )
 
-        with self.assertRaisesRegex(FileNotFoundError, "No ready VisualAsset"):
+        with self.assertRaisesRegex(ValueError, "Job mismatch"):
             resolve_visual_asset_for_scene(job_dir, self.scene())
 
     def test_rejects_ready_asset_without_asset_id(self):
