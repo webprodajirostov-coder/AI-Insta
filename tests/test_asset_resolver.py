@@ -103,7 +103,7 @@ class VisualAssetResolutionTests(unittest.TestCase):
     def test_rejects_ready_asset_without_asset_id(self):
         job_dir = self.make_job(assets=[{"asset_id": "", "path": "AUTO"}])
 
-        with self.assertRaisesRegex(FileNotFoundError, "No ready VisualAsset"):
+        with self.assertRaisesRegex(ValueError, "READY VisualAsset has no asset_id"):
             resolve_visual_asset_for_scene(job_dir, self.scene())
 
     def test_rejects_missing_physical_file(self):
