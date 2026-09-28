@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from src.asset_resolver import resolve_visual_asset
+from src.asset_resolver import resolve_visual_asset_for_scene
 from src.audio_resolver import resolve_audio_asset
 
 
@@ -62,8 +62,7 @@ def build_assembly_plan(job_dir):
 
     for scene in scenes:
         visual = scene["visual"]
-        visual_asset_id = find_asset_id(job_dir, visual["type"])
-        visual_asset_path = resolve_visual_asset(job_dir, visual_asset_id)
+        resolved_visual = resolve_visual_asset_for_scene(job_dir, scene)
 
         plan_scenes.append(
             {
@@ -75,8 +74,8 @@ def build_assembly_plan(job_dir):
                     "type": visual["type"],
                     "generation_required": visual["generation_required"],
                     "prompt_en": visual.get("prompt_en"),
-                    "asset_id": visual_asset_id,
-                    "asset_path": str(visual_asset_path),
+                    "asset_id": resolved_visual["asset_id"],
+                    "asset_path": resolved_visual["asset_path"],
                 },
                 "text_overlay": scene["text_overlay"],
                 "subtitles": scene["subtitles"],
