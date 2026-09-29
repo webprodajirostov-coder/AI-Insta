@@ -39,15 +39,17 @@ That allowed profile drift for an existing or waiting Job if the static profile 
 
 Before this slice: `139 tests — OK`.
 
-**This slice still requires a fresh full runtime suite in Replit.**
+**Fresh runtime validation: `141 tests — OK` in 42.877s.**
 
 ### Status
 
-Implementation complete; runtime validation pending.
+Complete. The full runtime suite passes.
 
 ### Next architectural question
 
-After the test run, inspect the remaining Job/production contract for any other execution-time data that is re-derived from mutable global sources instead of being fixed by the Job.
+Before starting the next slice, review the branch against `main` and close this checkpoint through the normal merge flow.
+
+After merge, inspect the remaining Job/production contract for any other execution-time data that is re-derived from mutable global sources instead of being fixed by the Job.
 
 Do not broaden this into general refactoring. Continue only where a concrete source-of-truth violation exists.
 
