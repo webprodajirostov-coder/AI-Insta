@@ -398,10 +398,9 @@ def run_audio_stage(job_dir):
 
     job = load_job(job_dir)
     scenario = load_json(job_dir / "content" / "scenario.json")
-    profile_name = scenario["production_profile"]
-    profile = load_json(
-        Path("data/production_profiles") / f"{profile_name}.json"
-    )
+    from src.production_profile_store import load_job_production_profile
+
+    profile = load_job_production_profile(job_dir, job)
     audio_config = profile["audio"]
 
     music_enabled = audio_config["music"]
