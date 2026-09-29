@@ -249,7 +249,7 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             ),
             scenario_generator=ScenarioGenerator(scenario_provider),
             production_profile_store=ProductionProfileStore(
-                ROOT / "data" / "production_profiles"
+                Path(__file__).resolve().parents[1] / "data" / "production_profiles"
             ),
         )
 
