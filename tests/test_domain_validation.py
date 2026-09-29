@@ -142,20 +142,7 @@ class DomainValidationTests(unittest.TestCase):
                         },
                         "text_overlay": None,
                         "subtitles": None,
-                    },
-                    {
-                        "scene_id": "scene_002",
-                        "order": 2,
-                        "duration_seconds": 5,
-                        "voiceover_text": "",
-                        "visual": {
-                            "type": "image",
-                            "generation_required": True,
-                            "prompt_en": "Test visual prompt",
-                        },
-                        "text_overlay": None,
-                        "subtitles": None,
-                    },
+                    }
                 ],
                 "duration_seconds": 8,
                 "assembly": {
@@ -167,7 +154,7 @@ class DomainValidationTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             DomainValidationError,
-            "does not match sum\\(Scene.duration_seconds\\)=10",
+            "does not match sum\\(Scene.duration_seconds\\)=5",
         ):
             validate_content_chain(
                 account=self.account,
@@ -386,7 +373,7 @@ class ResearchReferenceIntegrationTests(unittest.TestCase):
         idea["research_refs"] = ["missing_insight"]
 
         with self.assertRaises(DomainValidationError):
-            self._validate(idea, self.concept, {})
+            self._validate(self.idea, self.concept, {})
 
     def test_rejects_cross_account_research_insight(self):
         insight = {
