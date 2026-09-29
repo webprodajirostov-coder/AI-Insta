@@ -4,6 +4,7 @@ from pathlib import Path
 from src.asset_resolver import resolve_visual_asset_for_scene
 from src.audio_resolver import resolve_audio_asset
 from src.domain_validation import validate_production_profile, validate_scenario_v2
+from src.production_profile_store import load_job_production_profile
 
 
 def load_json(path):
@@ -51,9 +52,7 @@ def build_assembly_plan(job_dir):
     if scenario.get("schema_version") != 2:
         raise ValueError("Assembly requires Scenario v2")
 
-    profile_name = scenario["production_profile"]
-    profile_path = Path("data/production_profiles") / f"{profile_name}.json"
-    profile = load_json(profile_path)
+    profile = load_job_production_profile(job_dir, job)
 
     validate_production_profile(profile)
     validate_scenario_v2(scenario, profile)
