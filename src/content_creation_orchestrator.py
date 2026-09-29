@@ -3,7 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, Sequence
+from dataclasses import dataclass
+from typing import Any, Callable, Literal, Sequence
 
 from src.content_concept_generator import ContentConceptGenerator
 from src.content_concept_orchestrator import ContentConceptOrchestrator
@@ -13,6 +14,16 @@ from src.job_pipeline import run_pipeline
 from src.scenario_job_orchestrator import ScenarioJobOrchestrator
 from src.scenario_generator import ScenarioGenerator
 from src.scenario_llm_provider import LLMScenarioProvider
+
+
+@dataclass(frozen=True)
+class ContentCreationResult:
+    """Explicit result of Content Creation and its optional production run."""
+
+    job_dir: Path
+    status: Literal["created", "waiting", "completed", "failed"]
+    output_path: Path | None = None
+    error: str | None = None
 
 
 class ContentCreationOrchestrator:
@@ -102,7 +113,29 @@ class ContentCreationOrchestrator:
                 accounts_root=accounts_root,
             )
 
-        if run:
-            self.pipeline_runner(job_dir)
+        if not run:
+            return ContentCreationResult(
+                job_dir=job_dir,
+                status="created",
+            )
 
-        return job_dir
+        self.pipeline_runner(job_dir)
+        job = self._load_json(job_dir / "job.json")
+        status = job.get("status")
+
+        if status not in {"waiting", "completed", "failed"}:
+            raise ValueError(
+                "Content creation pipeline returned an invalid Job status: "
+                f"{status}"
+            )
+
+        output_path = None
+        if status == "completed":
+            output_path = Path(job["artifacts"]["output"])
+
+        return ContentCreationResult(
+            job_dir=job_dir,
+            status=status,
+            output_path=output_path,
+            error=job.get("error"),
+        )
