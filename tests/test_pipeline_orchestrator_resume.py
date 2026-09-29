@@ -39,7 +39,7 @@ class PipelineOrchestratorResumeTests(unittest.TestCase):
             assembly_calls = []
             output_calls = []
 
-            def finish_assembly(_job_dir):
+            def finish_assembly():
                 job_path = job_dir / "job.json"
                 job = json.loads(job_path.read_text(encoding="utf-8"))
                 job["pipeline"]["assembly"] = "completed"
@@ -49,7 +49,7 @@ class PipelineOrchestratorResumeTests(unittest.TestCase):
                     encoding="utf-8",
                 )
 
-            def finish_output(_job_dir):
+            def finish_output():
                 job_path = job_dir / "job.json"
                 job = json.loads(job_path.read_text(encoding="utf-8"))
                 job["pipeline"]["output"] = "completed"
