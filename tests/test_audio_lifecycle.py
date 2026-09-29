@@ -18,6 +18,7 @@ class AudioLifecycleTests(unittest.TestCase):
             "job_id": "job_audio_test",
             "account_id": "account_001",
             "status": "created",
+            "production": {"profile": "simple"},
         }
         scenario = {
             "production_profile": "simple",
