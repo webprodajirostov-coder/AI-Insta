@@ -151,7 +151,16 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             calls = []
 
             def pipeline_runner(job_dir):
-                calls.append(Path(job_dir))
+                job_dir = Path(job_dir)
+                calls.append(job_dir)
+                job_path = job_dir / "job.json"
+                job = json.loads(job_path.read_text(encoding="utf-8"))
+                job["status"] = "completed"
+                job["pipeline"]["output"] = "completed"
+                job["artifacts"]["output"] = str(
+                    job_dir / "output" / "final.mp4"
+                )
+                job_path.write_text(json.dumps(job), encoding="utf-8")
                 return True
 
             orchestrator = ContentCreationOrchestrator(
@@ -176,7 +185,7 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
 
             self.assertEqual(len(calls), 1)
             self.assertEqual(calls[0], result.job_dir)
-            self.assertEqual(result.status, "created")
+            self.assertEqual(result.status, "completed")
 
             job = json.loads(
                 (job_dir / "job.json").read_text(encoding="utf-8")
