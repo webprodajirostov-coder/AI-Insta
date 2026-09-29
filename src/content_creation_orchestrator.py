@@ -12,6 +12,7 @@ from src.content_idea_generator import ContentIdeaGenerator
 from src.content_idea_orchestrator import ContentIdeaOrchestrator
 from src.job_pipeline import run_pipeline
 from src.production_profile_store import ProductionProfileStore
+from src.production_profile_store import ProductionProfileStore
 from src.scenario_job_orchestrator import ScenarioJobOrchestrator
 from src.scenario_generator import ScenarioGenerator
 from src.scenario_llm_provider import LLMScenarioProvider
@@ -45,6 +46,9 @@ class ContentCreationOrchestrator:
             scenario_generator
         )
         self.pipeline_runner = pipeline_runner
+        self.production_profile_store = production_profile_store or ProductionProfileStore(
+            "data/production_profiles"
+        )
         self.production_profile_store = production_profile_store or ProductionProfileStore(
             "data/production_profiles"
         )
@@ -128,6 +132,18 @@ class ContentCreationOrchestrator:
                 )
             concept_path.write_text(
                 json.dumps(concepts[0], ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+            concept = self._load_json(concept_path)
+            account = self._load_json(account_path)
+            profile = self.production_profile_store.resolve_for_account(
+                account=account,
+                profile_id=concept["production_profile"],
+            )
+            profile_path = workspace / "production_profile.json"
+            profile_path.write_text(
+                json.dumps(profile, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
 
