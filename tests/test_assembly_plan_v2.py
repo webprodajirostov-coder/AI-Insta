@@ -127,6 +127,31 @@ class AssemblyPlanV2Tests(unittest.TestCase):
             )
             self.assertNotIn("visual", plan["inputs"])
 
+    def test_assembly_plan_rejects_ambiguous_visual_assets(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            job_dir = self._create_simple_job(Path(temp_dir))
+
+            second = job_dir / "media" / "visual" / "visual_002.png"
+            second.write_bytes(b"visual")
+            second_asset = {
+                "entity": "VisualAsset",
+                "asset_id": "visual_002",
+                "job_id": "job_001",
+                "type": "image",
+                "status": "ready",
+                "path": str(second),
+            }
+            (job_dir / "media" / "visual" / "visual_002.json").write_text(
+                json.dumps(second_asset, indent=2),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "Ambiguous VisualAsset resolution",
+            ):
+                build_assembly_plan(job_dir)
+
     def test_simple_renderer_rejects_visual_path_outside_job(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             job_dir = self._create_simple_job(Path(temp_dir))
