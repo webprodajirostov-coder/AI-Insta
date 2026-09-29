@@ -5,6 +5,7 @@ from pathlib import Path
 
 from src.assembly import build_assembly_plan
 from src.assembly_renderer import render_assembly
+from src.domain_validation import DomainValidationError
 
 
 class AssemblyPlanV2Tests(unittest.TestCase):
@@ -126,6 +127,23 @@ class AssemblyPlanV2Tests(unittest.TestCase):
                 str(job_dir / "media" / "audio" / "music_001.mp3"),
             )
             self.assertNotIn("visual", plan["inputs"])
+
+    def test_assembly_plan_rejects_scenario_profile_constraint_violation(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            job_dir = self._create_simple_job(Path(temp_dir))
+            scenario_path = job_dir / "content" / "scenario.json"
+            scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
+            scenario["duration_seconds"] = 11
+            scenario_path.write_text(
+                json.dumps(scenario, indent=2),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                DomainValidationError,
+                "outside ProductionProfile simple bounds",
+            ):
+                build_assembly_plan(job_dir)
 
     def test_assembly_plan_rejects_ambiguous_visual_assets(self):
         with tempfile.TemporaryDirectory() as temp_dir:
