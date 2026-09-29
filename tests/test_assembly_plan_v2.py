@@ -121,6 +121,9 @@ class AssemblyPlanV2Tests(unittest.TestCase):
                 scene["visual"]["asset_path"],
                 str(job_dir / "media" / "visual" / "visual_001.png"),
             )
+            self.assertNotIn("generation_required", scene["visual"])
+            self.assertNotIn("prompt_en", scene["visual"])
+
 
             self.assertEqual(
                 plan["inputs"]["audio"]["music"]["asset_path"],
