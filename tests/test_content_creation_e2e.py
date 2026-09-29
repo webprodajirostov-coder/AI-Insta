@@ -7,6 +7,7 @@ from pathlib import Path
 from src.content_concept_generator import ContentConceptGenerator
 from src.content_creation_orchestrator import ContentCreationOrchestrator
 from src.content_idea_generator import ContentIdeaGenerator
+from src.production_profile_store import ProductionProfileStore
 from src.scenario_generator import ScenarioGenerator
 from src.job_pipeline import run_pipeline
 
@@ -114,22 +115,6 @@ class ContentCreationE2ETests(unittest.TestCase):
             }],
             "assembly": {"transitions": False, "animation": "minimal"},
         }
-        profile = {
-            "profile_id": "simple",
-            "version": 1,
-            "status": "active",
-            "visual": {"count": 1, "types": ["image", "video"]},
-            "audio": {"tts": False, "music": True},
-            "text": {
-                "hook_overlay": True,
-                "subtitles": False,
-                "dynamic_subtitles": False,
-            },
-            "editing": {"transitions": False, "animation": "minimal"},
-            "duration_seconds": {"min": 6, "max": 10},
-            "cost_level": 1,
-        }
-
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             account_root = root / "accounts" / "account_e2e"
@@ -144,11 +129,9 @@ class ContentCreationE2ETests(unittest.TestCase):
 
             account_path = root / "account_input.json"
             knowledge_path = root / "knowledge_input.json"
-            profile_path = root / "profile.json"
 
             account_path.write_text(json.dumps(account), encoding="utf-8")
             knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
-            profile_path.write_text(json.dumps(profile), encoding="utf-8")
 
             def pipeline_runner(job_dir):
                 job_dir = Path(job_dir)
@@ -199,12 +182,14 @@ class ContentCreationE2ETests(unittest.TestCase):
                     StubScenarioProvider(scenario)
                 ),
                 pipeline_runner=pipeline_runner,
+                production_profile_store=ProductionProfileStore(
+                    Path(__file__).resolve().parents[1] / "data" / "production_profiles"
+                ),
             )
 
             result = orchestrator.create(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
-                production_profile_path=profile_path,
                 jobs_root=root / "jobs",
                 accounts_root=root / "accounts",
                 run=True,
