@@ -131,6 +131,7 @@ def create_job(
         },
         "production": {
             "profile": profile_id,
+            "profile_definition": profile,
         },
         "pipeline": pipeline,
         "artifacts": {
