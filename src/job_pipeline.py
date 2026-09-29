@@ -10,7 +10,7 @@ JOB_STATUS_TRANSITIONS = {
     "created": {"waiting", "failed"},
     "waiting": {"failed"},
     "completed": set(),
-    "failed": {"waiting"},
+    "failed": set(),
 }
 
 PIPELINE_STAGES = [
