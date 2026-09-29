@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from src.domain_validation import DomainValidationError
-from src.production_profile_store import ProductionProfileStore
+from src.production_profile_store import ProductionProfileStore, load_job_production_profile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,3 +74,43 @@ class ProductionProfileStoreTests(unittest.TestCase):
                 account=account,
                 profile_id="simple",
             )
+
+    def test_job_profile_snapshot_is_authoritative(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            job_dir = Path(tmp)
+            profile = self.store.load("simple")
+            profile["text"] = dict(profile["text"])
+            profile["text"]["hook_overlay"] = False
+            job = {
+                "production": {
+                    "profile": "simple",
+                    "profile_definition": profile,
+                }
+            }
+            (job_dir / "job.json").write_text(
+                json.dumps(job),
+                encoding="utf-8",
+            )
+
+            resolved = load_job_production_profile(job_dir)
+
+            self.assertFalse(resolved["text"]["hook_overlay"])
+
+    def test_job_profile_snapshot_rejects_id_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            job_dir = Path(tmp)
+            profile = self.store.load("simple")
+            profile["profile_id"] = "standard"
+            job = {
+                "production": {
+                    "profile": "simple",
+                    "profile_definition": profile,
+                }
+            }
+            (job_dir / "job.json").write_text(
+                json.dumps(job),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(DomainValidationError):
+                load_job_production_profile(job_dir)
