@@ -11,6 +11,7 @@ from src.content_concept_orchestrator import ContentConceptOrchestrator
 from src.content_idea_generator import ContentIdeaGenerator
 from src.content_idea_orchestrator import ContentIdeaOrchestrator
 from src.job_pipeline import run_pipeline
+from src.production_profile_store import ProductionProfileStore
 from src.scenario_job_orchestrator import ScenarioJobOrchestrator
 from src.scenario_generator import ScenarioGenerator
 from src.scenario_llm_provider import LLMScenarioProvider
@@ -36,6 +37,7 @@ class ContentCreationOrchestrator:
         concept_generator: ContentConceptGenerator,
         scenario_generator: ScenarioGenerator,
         pipeline_runner: Callable[[Path], bool] = run_pipeline,
+        production_profile_store: ProductionProfileStore | None = None,
     ):
         self.idea_orchestrator = ContentIdeaOrchestrator(idea_generator)
         self.concept_orchestrator = ContentConceptOrchestrator(concept_generator)
@@ -43,6 +45,9 @@ class ContentCreationOrchestrator:
             scenario_generator
         )
         self.pipeline_runner = pipeline_runner
+        self.production_profile_store = production_profile_store or ProductionProfileStore(
+            "data/production_profiles"
+        )
 
     @staticmethod
     def _load_json(path: str | Path) -> dict[str, Any]:
@@ -79,7 +84,6 @@ class ContentCreationOrchestrator:
         *,
         account_path: str | Path,
         knowledge_path: str | Path,
-        production_profile_path: str | Path,
         research_paths: Sequence[str | Path] = (),
         jobs_root: str | Path = "data/jobs",
         accounts_root: str | Path = "data/accounts",
@@ -127,10 +131,22 @@ class ContentCreationOrchestrator:
                 encoding="utf-8",
             )
 
+            concept = self._load_json(concept_path)
+            account = self._load_json(account_path)
+            profile = self.production_profile_store.resolve_for_account(
+                account=account,
+                profile_id=concept["production_profile"],
+            )
+            profile_path = workspace / "production_profile.json"
+            profile_path.write_text(
+                json.dumps(profile, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
             job_dir = self.scenario_job_orchestrator.generate_scenario_and_create_job(
                 content_idea_path=idea_path,
                 content_concept_path=concept_path,
-                production_profile_path=production_profile_path,
+                production_profile_path=profile_path,
                 scenario_output_path=scenario_path,
                 jobs_root=jobs_root,
                 accounts_root=accounts_root,
