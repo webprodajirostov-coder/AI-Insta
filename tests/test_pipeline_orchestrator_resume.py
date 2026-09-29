@@ -39,6 +39,16 @@ class PipelineOrchestratorResumeTests(unittest.TestCase):
             assembly_calls = []
             output_calls = []
 
+            def finish_assembly(_job_dir):
+                job_path = job_dir / "job.json"
+                job = json.loads(job_path.read_text(encoding="utf-8"))
+                job["pipeline"]["assembly"] = "completed"
+                assembly_calls.append(True)
+                job_path.write_text(
+                    json.dumps(job),
+                    encoding="utf-8",
+                )
+
             def finish_output(_job_dir):
                 job_path = job_dir / "job.json"
                 job = json.loads(job_path.read_text(encoding="utf-8"))
@@ -69,7 +79,7 @@ class PipelineOrchestratorResumeTests(unittest.TestCase):
             ), patch.object(
                 PipelineOrchestrator,
                 "_run_assembly",
-                side_effect=lambda: assembly_calls.append(True),
+                side_effect=finish_assembly,
             ), patch.object(
                 PipelineOrchestrator,
                 "_run_output",
@@ -98,7 +108,7 @@ class PipelineOrchestratorResumeTests(unittest.TestCase):
                 self.assertTrue(second_run)
                 self.assertEqual(second_job["status"], "completed")
                 self.assertEqual(second_job["pipeline"]["visual"], "completed")
-                self.assertEqual(second_job["pipeline"]["assembly"], "pending")
+                self.assertEqual(second_job["pipeline"]["assembly"], "completed")
                 self.assertEqual(second_job["pipeline"]["output"], "completed")
                 self.assertEqual(assembly_calls, [True])
                 self.assertEqual(output_calls, [True])
