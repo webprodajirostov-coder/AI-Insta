@@ -202,6 +202,40 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
                 "idea_001",
             )
 
+    def test_result_mapping_preserves_waiting_and_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            waiting_dir = root / "waiting_job"
+            waiting_dir.mkdir()
+            (waiting_dir / "job.json").write_text(
+                json.dumps({"status": "waiting"}),
+                encoding="utf-8",
+            )
+
+            failed_dir = root / "failed_job"
+            failed_dir.mkdir()
+            (failed_dir / "job.json").write_text(
+                json.dumps({
+                    "status": "failed",
+                    "error": "visual generation failed",
+                }),
+                encoding="utf-8",
+            )
+
+            waiting = ContentCreationOrchestrator._result_from_job(waiting_dir)
+            failed = ContentCreationOrchestrator._result_from_job(failed_dir)
+
+            self.assertEqual(waiting.status, "waiting")
+            self.assertEqual(waiting.job_dir, waiting_dir)
+            self.assertIsNone(waiting.output_path)
+            self.assertIsNone(waiting.error)
+
+            self.assertEqual(failed.status, "failed")
+            self.assertEqual(failed.job_dir, failed_dir)
+            self.assertIsNone(failed.output_path)
+            self.assertEqual(failed.error, "visual generation failed")
+
 
 if __name__ == "__main__":
     unittest.main()
