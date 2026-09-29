@@ -121,6 +121,63 @@ class DomainValidationTests(unittest.TestCase):
             profile=self.profile,
         )
 
+    def test_rejects_scenario_when_scene_durations_do_not_match_total(self):
+        scenario = dict(self.scenario)
+        for field in ("visual", "text_overlay", "audio", "subtitles"):
+            scenario.pop(field, None)
+
+        scenario.update(
+            {
+                "schema_version": 2,
+                "scenes": [
+                    {
+                        "scene_id": "scene_001",
+                        "order": 1,
+                        "duration_seconds": 5,
+                        "voiceover_text": "",
+                        "visual": {
+                            "type": "image",
+                            "generation_required": True,
+                            "prompt_en": "Test visual prompt",
+                        },
+                        "text_overlay": None,
+                        "subtitles": None,
+                    },
+                    {
+                        "scene_id": "scene_002",
+                        "order": 2,
+                        "duration_seconds": 5,
+                        "voiceover_text": "",
+                        "visual": {
+                            "type": "image",
+                            "generation_required": True,
+                            "prompt_en": "Test visual prompt",
+                        },
+                        "text_overlay": None,
+                        "subtitles": None,
+                    },
+                ],
+                "duration_seconds": 8,
+                "assembly": {
+                    "transitions": False,
+                    "animation": "minimal",
+                },
+            }
+        )
+
+        with self.assertRaisesRegex(
+            DomainValidationError,
+            "does not match sum\\(Scene.duration_seconds\\)=10",
+        ):
+            validate_content_chain(
+                account=self.account,
+                knowledge=self.knowledge,
+                idea=self.idea,
+                concept=self.concept,
+                scenario=scenario,
+                profile=self.profile,
+            )
+
     def test_rejects_cross_account_concept(self):
         broken = dict(self.concept)
         broken["account_id"] = "other_account"
