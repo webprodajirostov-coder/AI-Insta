@@ -3,6 +3,7 @@ from pathlib import Path
 
 from src.asset_resolver import resolve_visual_asset_for_scene
 from src.audio_resolver import resolve_audio_asset
+from src.domain_validation import validate_production_profile, validate_scenario_v2
 
 
 def load_json(path):
@@ -53,6 +54,9 @@ def build_assembly_plan(job_dir):
     profile_name = scenario["production_profile"]
     profile_path = Path("data/production_profiles") / f"{profile_name}.json"
     profile = load_json(profile_path)
+
+    validate_production_profile(profile)
+    validate_scenario_v2(scenario, profile)
 
     scenes = scenario["scenes"]
     if not scenes:
