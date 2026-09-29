@@ -60,7 +60,7 @@ def main() -> None:
 
     research_paths = [ROOT / path for path in args.research]
 
-    job_dir = orchestrator.create(
+    result = orchestrator.create(
         account_path=account_path,
         knowledge_path=knowledge_path,
         production_profile_path=profile_path,
@@ -70,8 +70,12 @@ def main() -> None:
         run=not args.no_run,
     )
 
-    print("CONTENT CREATION: OK")
-    print("JOB:", job_dir)
+    print("CONTENT CREATION:", result.status.upper())
+    print("JOB:", result.job_dir)
+    if result.output_path:
+        print("OUTPUT:", result.output_path)
+    if result.error:
+        print("ERROR:", result.error)
 
 
 if __name__ == "__main__":
