@@ -8,6 +8,7 @@ from src.content_concept_generator import ContentConceptGenerator
 from src.content_creation_orchestrator import ContentCreationOrchestrator
 from src.content_idea_generator import ContentIdeaGenerator
 from src.scenario_generator import ScenarioGenerator
+from src.job_pipeline import run_pipeline
 
 
 class StubIdeaProvider:
@@ -149,6 +150,44 @@ class ContentCreationE2ETests(unittest.TestCase):
             knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
             profile_path.write_text(json.dumps(profile), encoding="utf-8")
 
+            def pipeline_runner(job_dir):
+                job_dir = Path(job_dir)
+                visual_dir = job_dir / "media" / "visual"
+                visual_path = visual_dir / "visual_001.png"
+                visual_asset_path = visual_dir / "visual_001.json"
+
+                if not visual_asset_path.exists():
+                    visual_path.write_bytes(
+                        base64.b64decode(
+                            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk"
+                            "+A8AAQUBAScY42YAAAAASUVORK5CYII="
+                        )
+                    )
+
+                    job = json.loads(
+                        (job_dir / "job.json").read_text(encoding="utf-8")
+                    )
+                    visual_asset = {
+                        "schema_version": 1,
+                        "entity": "VisualAsset",
+                        "asset_id": "visual_001",
+                        "job_id": job["job_id"],
+                        "type": "image",
+                        "status": "ready",
+                        "source": {
+                            "provider": "test",
+                            "prompt": scenario["scenes"][0]["visual"]["prompt_en"],
+                        },
+                        "path": str(visual_path.resolve()),
+                        "provider_job": None,
+                    }
+                    visual_asset_path.write_text(
+                        json.dumps(visual_asset),
+                        encoding="utf-8",
+                    )
+
+                return run_pipeline(job_dir)
+
             orchestrator = ContentCreationOrchestrator(
                 idea_generator=ContentIdeaGenerator(
                     StubIdeaProvider(idea)
@@ -159,6 +198,7 @@ class ContentCreationE2ETests(unittest.TestCase):
                 scenario_generator=ScenarioGenerator(
                     StubScenarioProvider(scenario)
                 ),
+                pipeline_runner=pipeline_runner,
             )
 
             job_dir = orchestrator.create(
@@ -167,41 +207,7 @@ class ContentCreationE2ETests(unittest.TestCase):
                 production_profile_path=profile_path,
                 jobs_root=root / "jobs",
                 accounts_root=root / "accounts",
-                run=False,
-            )
-
-            visual_dir = job_dir / "media" / "visual"
-            visual_path = visual_dir / "visual_001.png"
-            visual_path.write_bytes(
-                base64.b64decode(
-                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk"
-                    "+A8AAQUBAScY42YAAAAASUVORK5CYII="
-                )
-            )
-
-            visual_asset = {
-                "schema_version": 1,
-                "entity": "VisualAsset",
-                "asset_id": "visual_001",
-                "job_id": json.loads(
-                    (job_dir / "job.json").read_text(encoding="utf-8")
-                )["job_id"],
-                "type": "image",
-                "status": "ready",
-                "source": {
-                    "provider": "test",
-                    "prompt": scenario["scenes"][0]["visual"]["prompt_en"],
-                },
-                "path": str(visual_path.resolve()),
-                "provider_job": None,
-            }
-            (visual_dir / "visual_001.json").write_text(
-                json.dumps(visual_asset),
-                encoding="utf-8",
-            )
-
-            self.assertTrue(
-                orchestrator.pipeline_runner(job_dir)
+                run=True,
             )
 
             job = json.loads(
@@ -263,9 +269,7 @@ class ContentCreationE2ETests(unittest.TestCase):
             self.assertEqual(stored_scenario["concept_id"], "concept_e2e")
             self.assertEqual(stored_scenario["account_id"], "account_e2e")
 
-            self.assertTrue(
-                orchestrator.pipeline_runner(job_dir)
-            )
+            self.assertTrue(run_pipeline(job_dir))
 
             rerun_job = json.loads(
                 (job_dir / "job.json").read_text(encoding="utf-8")
