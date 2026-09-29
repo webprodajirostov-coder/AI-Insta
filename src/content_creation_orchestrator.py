@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from dataclasses import dataclass
 from typing import Any, Callable, Literal, Sequence
 
 from src.content_concept_generator import ContentConceptGenerator
@@ -84,7 +84,7 @@ class ContentCreationOrchestrator:
         jobs_root: str | Path = "data/jobs",
         accounts_root: str | Path = "data/accounts",
         run: bool = True,
-    ) -> Path:
+    ) -> ContentCreationResult:
         with TemporaryDirectory(prefix="ai_insta_content_") as tmp:
             workspace = Path(tmp)
             ideas_path = workspace / "ideas.json"
