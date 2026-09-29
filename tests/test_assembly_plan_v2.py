@@ -128,6 +128,23 @@ class AssemblyPlanV2Tests(unittest.TestCase):
             )
             self.assertNotIn("visual", plan["inputs"])
 
+    def test_assembly_plan_rejects_scene_duration_mismatch(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            job_dir = self._create_simple_job(Path(temp_dir))
+            scenario_path = job_dir / "content" / "scenario.json"
+            scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
+            scenario["scenes"][0]["duration_seconds"] = 7
+            scenario_path.write_text(
+                json.dumps(scenario, indent=2),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                DomainValidationError,
+                "does not match sum\\(Scene.duration_seconds\\)=7",
+            ):
+                build_assembly_plan(job_dir)
+
     def test_assembly_plan_rejects_scenario_profile_constraint_violation(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             job_dir = self._create_simple_job(Path(temp_dir))
