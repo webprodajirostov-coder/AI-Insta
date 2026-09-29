@@ -6,6 +6,8 @@ from pathlib import Path
 from src.content_concept_generator import ContentConceptGenerator
 from src.content_creation_orchestrator import ContentCreationOrchestrator
 from src.content_idea_generator import ContentIdeaGenerator
+from src.domain_validation import DomainValidationError
+from src.production_profile_store import ProductionProfileStore
 from src.scenario_generator import ScenarioGenerator
 
 
@@ -28,8 +30,10 @@ class StubConceptProvider:
 class StubScenarioProvider:
     def __init__(self, scenario):
         self.scenario = scenario
+        self.calls = 0
 
     def generate_scenarios(self, **kwargs):
+        self.calls += 1
         return [self.scenario]
 
 
@@ -172,12 +176,14 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
                     StubScenarioProvider(scenario)
                 ),
                 pipeline_runner=pipeline_runner,
+                production_profile_store=ProductionProfileStore(
+                    ROOT / "data" / "production_profiles"
+                ),
             )
 
             result = orchestrator.create(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
-                production_profile_path=profile_path,
                 jobs_root=root / "jobs",
                 accounts_root=root / "accounts",
                 run=True,
@@ -201,6 +207,87 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
                 )["idea_id"],
                 "idea_001",
             )
+
+    def test_rejects_unsupported_concept_profile_before_scenario_generation(self):
+        account = {
+            "account_id": "account_001",
+            "version": 1,
+            "status": "active",
+            "identity": {"language": "en"},
+            "audience": {},
+            "content_strategy": {"pillars": ["Relatable Pain"]},
+            "production_defaults": {
+                "baseline_format": "simple",
+                "supported_complexity_levels": ["simple"],
+            },
+        }
+        knowledge = {
+            "knowledge_id": "knowledge_001",
+            "account_id": "account_001",
+            "core_concepts": [{"id": "kc_001"}],
+            "audience_insights": [{"id": "ai_001"}],
+            "psychological_mechanisms": [],
+            "content_pillars": [],
+        }
+        idea = {
+            "idea_id": "idea_001",
+            "account_id": "account_001",
+            "status": "draft",
+            "source": {"type": "knowledge", "source_ids": ["kc_001"]},
+            "topic": "pricing",
+            "content_pillar": "Relatable Pain",
+            "funnel_stage": "tofu",
+            "angle": "Pricing hesitation can protect from rejection.",
+            "audience_problem": "Naming the price feels unsafe.",
+            "audience_desire": "Charge appropriately.",
+            "hook_direction": "Reveal the hidden reason.",
+            "why_now": "Pricing is often treated as tactics only.",
+            "knowledge_refs": ["kc_001"],
+            "research_refs": [],
+            "production": {"profile": "standard"},
+        }
+        concept = {
+            "concept_id": "concept_001",
+            "core_message": "Pricing hesitation can protect from rejection.",
+            "problem": "The expert lowers price before being asked.",
+            "reframe": "The problem may be emotional safety.",
+            "psychological_mechanism": "rejection_avoidance",
+            "key_points": ["Notice the emotion before naming the price."],
+            "hook": "You might not be undercharging because you're modest.",
+            "emotional_direction": "recognition to reflection",
+            "audience_takeaway": "Notice the emotion before naming the price.",
+            "cta": {"type": "none", "text": ""},
+            "production_profile": "standard",
+        }
+        scenario_provider = StubScenarioProvider({})
+        orchestrator = ContentCreationOrchestrator(
+            idea_generator=ContentIdeaGenerator(StubIdeaProvider(idea)),
+            concept_generator=ContentConceptGenerator(
+                StubConceptProvider(concept)
+            ),
+            scenario_generator=ScenarioGenerator(scenario_provider),
+            production_profile_store=ProductionProfileStore(
+                ROOT / "data" / "production_profiles"
+            ),
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            account_path = root / "account.json"
+            knowledge_path = root / "knowledge.json"
+            account_path.write_text(json.dumps(account), encoding="utf-8")
+            knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
+
+            with self.assertRaises(DomainValidationError):
+                orchestrator.create(
+                    account_path=account_path,
+                    knowledge_path=knowledge_path,
+                    jobs_root=root / "jobs",
+                    accounts_root=root / "accounts",
+                    run=False,
+                )
+
+        self.assertEqual(scenario_provider.calls, 0)
 
     def test_result_mapping_preserves_waiting_and_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
