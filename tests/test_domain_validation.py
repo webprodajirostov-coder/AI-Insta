@@ -373,7 +373,7 @@ class ResearchReferenceIntegrationTests(unittest.TestCase):
         idea["research_refs"] = ["missing_insight"]
 
         with self.assertRaises(DomainValidationError):
-            self._validate(self.idea, self.concept, {})
+            self._validate(idea, self.concept, {})
 
     def test_rejects_cross_account_research_insight(self):
         insight = {
