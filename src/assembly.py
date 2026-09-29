@@ -84,10 +84,17 @@ def build_assembly_plan(job_dir):
             }
         )
 
+    music_asset_id = None
     music_asset_path = None
     if profile["audio"]["music"]:
         music_asset_id = find_asset_id(job_dir, "music")
         music_asset_path = str(resolve_audio_asset(job_dir, music_asset_id))
+
+    tts_asset_id = None
+    tts_asset_path = None
+    if profile["audio"]["tts"]:
+        tts_asset_id = find_asset_id(job_dir, "tts")
+        tts_asset_path = str(resolve_audio_asset(job_dir, tts_asset_id))
 
     plan = {
         "schema_version": 2,
@@ -101,10 +108,12 @@ def build_assembly_plan(job_dir):
             "audio": {
                 "tts": {
                     "enabled": profile["audio"]["tts"],
-                    "asset_path": None,
+                    "asset_id": tts_asset_id,
+                    "asset_path": tts_asset_path,
                 },
                 "music": {
                     "enabled": profile["audio"]["music"],
+                    "asset_id": music_asset_id,
                     "asset_path": music_asset_path,
                 },
             },
