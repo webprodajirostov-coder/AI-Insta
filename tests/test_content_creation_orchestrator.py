@@ -165,7 +165,7 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
                 pipeline_runner=pipeline_runner,
             )
 
-            job_dir = orchestrator.create(
+            result = orchestrator.create(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
                 production_profile_path=profile_path,
@@ -175,7 +175,8 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             )
 
             self.assertEqual(len(calls), 1)
-            self.assertEqual(calls[0], job_dir)
+            self.assertEqual(calls[0], result.job_dir)
+            self.assertEqual(result.status, "created")
 
             job = json.loads(
                 (job_dir / "job.json").read_text(encoding="utf-8")
@@ -185,7 +186,7 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             self.assertEqual(job["content"]["scenario_id"], "scenario_001")
             self.assertEqual(
                 json.loads(
-                    (job_dir / "input" / "content_idea.json").read_text(
+                    (result.job_dir / "input" / "content_idea.json").read_text(
                         encoding="utf-8"
                     )
                 )["idea_id"],
