@@ -491,10 +491,9 @@ def dry_run_pipeline(job_dir):
 
     # AUDIO STAGE
     scenario = load_json(job_dir / "content" / "scenario.json")
-    profile_name = scenario["production_profile"]
-    profile = load_json(
-        Path("data/production_profiles") / f"{profile_name}.json"
-    )
+    from src.production_profile_store import load_job_production_profile
+
+    profile = load_job_production_profile(job_dir, job)
     music_enabled = profile["audio"]["music"]
 
     if music_enabled:
