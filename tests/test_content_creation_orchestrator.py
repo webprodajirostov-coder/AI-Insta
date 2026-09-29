@@ -116,30 +116,12 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             }],
             "assembly": {"transitions": False, "animation": "minimal"},
         }
-        profile = {
-            "profile_id": "simple",
-            "version": 1,
-            "status": "active",
-            "visual": {"count": 1, "types": ["image", "video"]},
-            "audio": {"tts": False, "music": True},
-            "text": {
-                "hook_overlay": True,
-                "subtitles": False,
-                "dynamic_subtitles": False,
-            },
-            "editing": {"transitions": False, "animation": "minimal"},
-            "duration_seconds": {"min": 6, "max": 10},
-            "cost_level": 1,
-        }
-
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             account_path = root / "account.json"
             knowledge_path = root / "knowledge.json"
-            profile_path = root / "profile.json"
             account_path.write_text(json.dumps(account), encoding="utf-8")
             knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
-            profile_path.write_text(json.dumps(profile), encoding="utf-8")
 
             account_root = root / "accounts" / "account_001"
             account_root.mkdir(parents=True)
