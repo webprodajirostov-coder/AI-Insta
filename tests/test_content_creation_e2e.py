@@ -201,7 +201,7 @@ class ContentCreationE2ETests(unittest.TestCase):
                 pipeline_runner=pipeline_runner,
             )
 
-            job_dir = orchestrator.create(
+            result = orchestrator.create(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
                 production_profile_path=profile_path,
@@ -210,6 +210,14 @@ class ContentCreationE2ETests(unittest.TestCase):
                 run=True,
             )
 
+            self.assertEqual(result.status, "completed")
+            self.assertIsNotNone(result.output_path)
+            self.assertEqual(
+                result.output_path.resolve(),
+                (result.job_dir / "output" / "final.mp4").resolve(),
+            )
+
+            job_dir = result.job_dir
             job = json.loads(
                 (job_dir / "job.json").read_text(encoding="utf-8")
             )
