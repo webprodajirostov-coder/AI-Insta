@@ -35,7 +35,7 @@ def resolve_visual_asset(job_dir, asset_id):
     physical_path = Path(asset["path"])
 
     if not physical_path.is_absolute():
-        physical_path = Path.cwd() / physical_path
+        physical_path = job_dir / physical_path
 
     physical_path = physical_path.resolve()
     job_root = job_dir.resolve()
@@ -53,7 +53,6 @@ def resolve_visual_asset(job_dir, asset_id):
         )
 
     return physical_path
-
 
 
 def resolve_visual_asset_for_scene(job_dir, scene):
