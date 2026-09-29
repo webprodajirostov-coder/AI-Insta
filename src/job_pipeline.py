@@ -352,6 +352,47 @@ def run_visual_stage(job_dir):
     raise RuntimeError(f"Unsupported visual action: {action}")
 
 
+def _ready_audio_assets_by_type(job_dir):
+    job_dir = Path(job_dir)
+    assets_dir = job_dir / "media" / "audio"
+
+    ready = {}
+
+    for asset_path in assets_dir.glob("*.json"):
+        asset = load_json(asset_path)
+
+        if (
+            asset.get("entity") != "AudioAsset"
+            or asset.get("status") != "ready"
+        ):
+            continue
+
+        asset_type = asset.get("type")
+        if not asset_type:
+            continue
+
+        ready.setdefault(asset_type, []).append(
+            (asset_path, asset)
+        )
+
+    return ready
+
+
+def _get_single_ready_audio_asset(job_dir, audio_type):
+    ready = _ready_audio_assets_by_type(job_dir).get(audio_type, [])
+
+    if len(ready) > 1:
+        raise ValueError(
+            f"Multiple ready AudioAssets found for type={audio_type}: "
+            f"{[item[1].get('asset_id') for item in ready]}"
+        )
+
+    if not ready:
+        return None
+
+    return ready[0][1]
+
+
 def run_audio_stage(job_dir):
     job_dir = Path(job_dir)
 
@@ -372,38 +413,26 @@ def run_audio_stage(job_dir):
 
     from src.audio_resolver import resolve_audio_asset
 
-    assets_dir = job_dir / "media" / "audio"
-    candidates = []
+    # Each enabled audio type is an independent requirement.
+    # A READY asset of another type must never satisfy it.
+    music_asset = (
+        _get_single_ready_audio_asset(job_dir, "music")
+        if music_enabled
+        else None
+    )
+    tts_asset = (
+        _get_single_ready_audio_asset(job_dir, "tts")
+        if tts_enabled
+        else None
+    )
 
-    for asset_path in assets_dir.glob("*.json"):
-        with open(asset_path, "r", encoding="utf-8") as f:
-            asset = json.load(f)
-
-        if asset.get("entity") == "AudioAsset":
-            candidates.append((asset_path, asset))
-
-    ready = [
-        item for item in candidates
-        if item[1].get("status") == "ready"
-    ]
-
-    if len(ready) > 1:
-        raise ValueError(
-            f"Multiple ready AudioAssets found: "
-            f"{[item[1].get('asset_id') for item in ready]}"
+    if tts_enabled and tts_asset is None:
+        raise RuntimeError(
+            "TTS is enabled, but no ready TTS AudioAsset exists "
+            "and no TTS audio provider is implemented"
         )
 
-    if len(ready) == 1:
-        asset_id = ready[0][1]["asset_id"]
-        audio_path = resolve_audio_asset(job_dir, asset_id)
-
-        print("AUDIO STAGE: READY")
-        print("ACTION: SKIP GENERATION")
-        print("FILE:", audio_path)
-
-        return "completed"
-
-    if music_enabled:
+    if music_enabled and music_asset is None:
         from src.audio_generator import generate_mock_music
 
         print("AUDIO STAGE: NO READY MUSIC")
@@ -414,30 +443,31 @@ def run_audio_stage(job_dir):
             duration_seconds=scenario["duration_seconds"],
         )
 
-        ready = [
-            item
-            for item in assets_dir.glob("*.json")
-            if load_json(item).get("entity") == "AudioAsset"
-            and load_json(item).get("status") == "ready"
-        ]
+        music_asset = _get_single_ready_audio_asset(job_dir, "music")
 
-        if len(ready) != 1:
-            raise RuntimeError("Audio generation did not produce one ready AudioAsset")
+        if music_asset is None:
+            raise RuntimeError(
+                "Music generation did not produce a ready music AudioAsset"
+            )
 
-        asset_id = load_json(ready[0])["asset_id"]
-        audio_path = resolve_audio_asset(job_dir, asset_id)
-
-        print("AUDIO STAGE: COMPLETED")
-        print("FILE:", audio_path)
-
-        return "completed"
+    if music_enabled:
+        music_path = resolve_audio_asset(
+            job_dir,
+            music_asset["asset_id"],
+        )
+        print("AUDIO: music READY")
+        print("FILE:", music_path)
 
     if tts_enabled:
-        raise RuntimeError(
-            "TTS is enabled, but no TTS audio provider is implemented"
+        tts_path = resolve_audio_asset(
+            job_dir,
+            tts_asset["asset_id"],
         )
+        print("AUDIO: tts READY")
+        print("FILE:", tts_path)
 
-    return "skipped"
+    print("AUDIO STAGE: COMPLETED")
+    return "completed"
 
 
 def run_ready_pipeline(job_dir):
