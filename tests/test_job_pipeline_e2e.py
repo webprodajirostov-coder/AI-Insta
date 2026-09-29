@@ -104,6 +104,8 @@ class JobPipelineE2ETests(unittest.TestCase):
             )
 
             self.assertEqual(job["status"], "completed")
+            self.assertEqual(job["production"]["profile"], "simple")
+            self.assertEqual(job["production"]["profile_definition"]["profile_id"], "simple")
             self.assertEqual(
                 job["pipeline"],
                 {
