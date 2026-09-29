@@ -40,14 +40,6 @@ def main() -> None:
     account_dir = ROOT / "data" / "accounts" / args.account
     account_path = account_dir / "account.json"
     knowledge_path = account_dir / "knowledge.json"
-    profile_name = None
-
-    account = __import__("json").loads(
-        account_path.read_text(encoding="utf-8")
-    )
-    profile_name = account["production_defaults"]["baseline_format"]
-    profile_path = ROOT / "data" / "production_profiles" / f"{profile_name}.json"
-
     llm = ODIRouterLLMProvider(model=args.model)
 
     orchestrator = ContentCreationOrchestrator(
@@ -63,7 +55,6 @@ def main() -> None:
     result = orchestrator.create(
         account_path=account_path,
         knowledge_path=knowledge_path,
-        production_profile_path=profile_path,
         research_paths=research_paths,
         jobs_root=ROOT / args.jobs_root,
         accounts_root=ROOT / "data" / "accounts",
