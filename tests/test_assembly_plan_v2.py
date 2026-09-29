@@ -126,9 +126,16 @@ class AssemblyPlanV2Tests(unittest.TestCase):
 
 
             self.assertEqual(
+                plan["inputs"]["audio"]["music"]["asset_id"],
+                "music_001",
+            )
+            self.assertEqual(
                 plan["inputs"]["audio"]["music"]["asset_path"],
                 str(job_dir / "media" / "audio" / "music_001.mp3"),
             )
+            self.assertFalse(plan["inputs"]["audio"]["tts"]["enabled"])
+            self.assertIsNone(plan["inputs"]["audio"]["tts"]["asset_id"])
+            self.assertIsNone(plan["inputs"]["audio"]["tts"]["asset_path"])
             self.assertNotIn("visual", plan["inputs"])
 
     def test_assembly_plan_rejects_scene_duration_mismatch(self):
