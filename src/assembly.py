@@ -76,8 +76,6 @@ def build_assembly_plan(job_dir):
                 "voiceover_text": scene["voiceover_text"],
                 "visual": {
                     "type": visual["type"],
-                    "generation_required": visual["generation_required"],
-                    "prompt_en": visual.get("prompt_en"),
                     "asset_id": resolved_visual["asset_id"],
                     "asset_path": resolved_visual["asset_path"],
                 },
