@@ -188,7 +188,7 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             self.assertEqual(result.status, "completed")
 
             job = json.loads(
-                (job_dir / "job.json").read_text(encoding="utf-8")
+                (result.job_dir / "job.json").read_text(encoding="utf-8")
             )
             self.assertEqual(job["account_id"], "account_001")
             self.assertEqual(job["content"]["concept_id"], "concept_001")
