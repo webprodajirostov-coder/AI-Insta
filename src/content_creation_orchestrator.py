@@ -51,6 +51,29 @@ class ContentCreationOrchestrator:
             raise ValueError(f"JSON object expected: {path}")
         return value
 
+    @classmethod
+    def _result_from_job(cls, job_dir: str | Path) -> ContentCreationResult:
+        job_dir = Path(job_dir)
+        job = cls._load_json(job_dir / "job.json")
+        status = job.get("status")
+
+        if status not in {"waiting", "completed", "failed"}:
+            raise ValueError(
+                "Content creation pipeline returned an invalid Job status: "
+                f"{status}"
+            )
+
+        output_path = None
+        if status == "completed":
+            output_path = Path(job["artifacts"]["output"])
+
+        return ContentCreationResult(
+            job_dir=job_dir,
+            status=status,
+            output_path=output_path,
+            error=job.get("error"),
+        )
+
     def create(
         self,
         *,
@@ -120,22 +143,4 @@ class ContentCreationOrchestrator:
             )
 
         self.pipeline_runner(job_dir)
-        job = self._load_json(job_dir / "job.json")
-        status = job.get("status")
-
-        if status not in {"waiting", "completed", "failed"}:
-            raise ValueError(
-                "Content creation pipeline returned an invalid Job status: "
-                f"{status}"
-            )
-
-        output_path = None
-        if status == "completed":
-            output_path = Path(job["artifacts"]["output"])
-
-        return ContentCreationResult(
-            job_dir=job_dir,
-            status=status,
-            output_path=output_path,
-            error=job.get("error"),
-        )
+        return self._result_from_job(job_dir)
