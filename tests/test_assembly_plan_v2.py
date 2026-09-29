@@ -18,6 +18,7 @@ class AssemblyPlanV2Tests(unittest.TestCase):
         job = {
             "job_id": "job_001",
             "account_id": "account_001",
+            "production": {"profile": "simple"},
         }
         scenario = {
             "schema_version": 2,
