@@ -8,21 +8,44 @@ It does **not** replace the detailed architecture/product documents. It tells us
 
 ## Current checkpoint
 
-**Branch:** `feature/scenario-generation-orchestration`
+**Branch:** `feature/concept-profile-ownership`
 
-**Latest repository checkpoint:** `6f35513e9f68eb066a0145bcc117d88dee67a5de` — `Add valid Research smoke input for product E2E`
+**Latest repository checkpoint:** `92a6a8396b75056be732640cf6ae231e4ca92447` — `Test system-owned ContentConcept profile`
 
-**Runtime validation:** `155 tests — OK`
+Previous implementation commit:
+`2376286b0b313d00b8acbdcd059b8b49e92b03bf` — `Make ContentConcept production profile system-owned`
 
-**Real product smoke:** Job `20260930_145833` completed successfully with configured ODIRouter LLM + Kling visual provider.
+**Latest real product smoke:** Job `20260930_212719` completed successfully through the public `src.create_content` entry point with a real Research input and configured ODIRouter/Kling visual provider.
 
-The current validated vertical slice is:
+**Final output validation:**
+- status: completed
+- video: H.264
+- resolution: 1080x1920
+- duration: 8.0s
+- audio: AAC
+- final file: `data/jobs/20260930_212719/output/final.mp4`
+- size: 345330 bytes
 
-`Raw Research → ResearchInsight → ContentIdea → ContentConcept → ProductionProfile → Scenario → Job → Audio/Visual → Assembly → validated final MP4`
+**Test status:** the focused regression test and full unittest suite have **not yet been rerun after the latest two commits**. The real product smoke itself passed.
 
-The latest E2E test confirms this full path, including persistence of ResearchInsight context inside the Job. A real product smoke also completed the same path from valid Research through real ResearchInsight generation, ContentIdea/Concept generation, Scenario/Job creation, asynchronous Kling visual generation, resume/poll, Assembly, rendering and final output validation.
+### Latest architectural fix
 
-The Job persists the resolved ProductionProfile definition as an execution snapshot. Execution-time consumers use that Job snapshot rather than re-resolving mutable global production profiles.
+A real smoke exposed that the LLM could return a ContentConcept `production_profile` different from the ContentIdea profile, even though the prompt instructed it to inherit the profile.
+
+The architecture was corrected so that `production_profile` is now **system-owned** at the ContentConcept boundary:
+
+- ContentConceptGenerator always sets `production_profile` from `ContentIdea.production.profile`.
+- A provider-supplied profile is ignored/overridden.
+- A regression test verifies that a deliberately wrong provider profile is replaced by the Idea profile.
+- Domain validation no longer needs to reject a provider mismatch because the mismatch cannot survive the generator boundary.
+
+This is now validated by the real end-to-end smoke: the previous ContentConcept profile mismatch no longer blocks Job creation or production.
+
+### Current validated vertical slice
+
+`Raw Research → ResearchInsight → ContentIdea → ContentConcept → system-owned ProductionProfile → Scenario → Job → Audio/Visual → Assembly → validated final MP4`
+
+The real smoke also confirmed asynchronous Kling visual generation and resume/idempotent completion after the Replit session was interrupted/reloaded.
 
 ## Current execution model
 
@@ -38,35 +61,19 @@ Execution chain:
 
 ## Current product boundary
 
-The first usable product slice is now technically present as a controlled end-to-end path.
+The first usable product slice is now technically present as a real provider-backed end-to-end path.
 
-The next goal is **product validation**, not another domain layer:
+The next goal is **architecture/product hardening of the first real content unit**, not adding another domain layer.
 
-1. provide a real Research input;
-2. generate ResearchInsights through the configured LLM provider;
-3. generate exactly one ContentIdea;
-4. generate exactly one ContentConcept;
-5. resolve the supported ProductionProfile;
-6. generate Scenario;
-7. create the Job;
-8. run the production pipeline;
-9. obtain a validated vertical final MP4.
+The immediate next investigation is:
 
-Do not add Instagram scraping/API, analytics, learning, STANDARD/ADVANCED profiles, or new orchestration layers before this product smoke path is validated.
-
-Research input should remain source-agnostic. Instagram/competitor collectors can be added later behind the existing Research contract.
-
-## Next action
-
-Perform an architecture/product checkpoint against the successful real smoke:
-
-1. verify which contracts are proven by real providers versus only by tests;
-2. inspect the generated Job artifacts and final Reel for product-quality gaps;
+1. remove `production_profile` from the LLM ContentConcept output responsibility entirely;
+2. inspect the generated Job artifacts and final Reel for remaining product-quality/contract gaps;
 3. reconcile PRODUCT_SPEC / ROADMAP / PROJECT_MAP with the actual implementation and remove stale checkpoint language;
-4. identify the smallest next product bottleneck;
+4. identify the smallest real product bottleneck;
 5. explicitly record what is out of scope for the next slice.
 
-The architectural path is proven. Do not add Instagram scraping/API, analytics, learning, STANDARD/ADVANCED profiles, or another orchestration layer merely because the vertical slice is complete.
+Do not add Instagram scraping/API, analytics, learning, STANDARD/ADVANCED profiles, or new orchestration layers before the current product bottleneck is identified.
 
 ## Architectural invariants
 
@@ -88,7 +95,8 @@ The architectural path is proven. Do not add Instagram scraping/API, analytics, 
 16. Account-supported production profiles are validated before Scenario provider generation.
 17. Job execution consumes the persisted ProductionProfile snapshot.
 18. ResearchInsight references must be preserved and validated through Job creation.
-19. `job_creator.py` is legacy architecture and must not return.
+19. ContentConcept production profile is system-owned and inherited from ContentIdea.
+20. `job_creator.py` is legacy architecture and must not return.
 
 ## Document catalog
 
