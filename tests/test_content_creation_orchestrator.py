@@ -232,8 +232,10 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
         }
         insight = {
             "insight_id": "insight_001",
+            "schema_version": 2,
             "source": {
                 "research_id": "research_001",
+                "material_refs": ["material_001"],
                 "type": "competitor",
                 "reference": "material_001",
             },
