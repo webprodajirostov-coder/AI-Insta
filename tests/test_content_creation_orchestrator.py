@@ -8,6 +8,7 @@ from src.content_creation_orchestrator import ContentCreationOrchestrator
 from src.content_idea_generator import ContentIdeaGenerator
 from src.domain_validation import DomainValidationError
 from src.production_profile_store import ProductionProfileStore
+from src.research_insight_generator import ResearchInsightGenerator
 from src.scenario_generator import ScenarioGenerator
 
 
@@ -25,6 +26,16 @@ class StubConceptProvider:
 
     def generate_content_concepts(self, **kwargs):
         return [self.concept]
+
+
+class StubResearchInsightProvider:
+    def __init__(self, insight):
+        self.insight = insight
+        self.calls = 0
+
+    def generate_research_insights(self, *, account, research):
+        self.calls += 1
+        return [self.insight]
 
 
 class StubScenarioProvider:
@@ -189,6 +200,173 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
                 )["idea_id"],
                 "idea_001",
             )
+
+    def test_raw_research_flows_through_content_creation(self):
+        account = {
+            "account_id": "account_001",
+            "version": 1,
+            "status": "active",
+            "identity": {"language": "en"},
+            "audience": {},
+            "content_strategy": {"pillars": ["Relatable Pain"]},
+            "production_defaults": {
+                "baseline_format": "simple",
+                "supported_complexity_levels": ["simple"],
+            },
+        }
+        knowledge = {
+            "knowledge_id": "knowledge_001",
+            "account_id": "account_001",
+            "core_concepts": [{"id": "kc_001"}],
+            "audience_insights": [],
+            "psychological_mechanisms": [],
+            "content_pillars": [],
+        }
+        research = {
+            "research_id": "research_001",
+            "account_id": "account_001",
+            "status": "ready",
+            "source": {"type": "competitor", "reference": "competitor_001"},
+            "subject": "competitor pricing content",
+            "material": [{"id": "material_001", "type": "post", "text": "Pricing fear."}],
+        }
+        insight = {
+            "insight_id": "insight_001",
+            "source": {
+                "research_id": "research_001",
+                "type": "competitor",
+                "reference": "material_001",
+            },
+            "topic": "pricing",
+            "observation": "Pricing content links hesitation with rejection.",
+            "evidence": ["material_001"],
+            "relevance": "Useful content angle.",
+            "content_implications": ["Explore rejection avoidance."],
+            "confidence": 0.8,
+        }
+        idea = {
+            "idea_id": "idea_001",
+            "account_id": "account_001",
+            "status": "draft",
+            "source": {"type": "research", "source_ids": ["insight_001"]},
+            "topic": "undercharging",
+            "content_pillar": "Relatable Pain",
+            "funnel_stage": "tofu",
+            "angle": "The hidden reason behind undercharging.",
+            "audience_problem": "Pricing feels unsafe.",
+            "audience_desire": "Charge appropriately.",
+            "hook_direction": "Expose the hidden pattern.",
+            "why_now": "Pricing is often treated as tactics.",
+            "knowledge_refs": ["kc_001"],
+            "research_refs": ["insight_001"],
+            "production": {"profile": "simple"},
+        }
+        concept = {
+            "concept_id": "concept_001",
+            "account_id": "account_001",
+            "idea_id": "idea_001",
+            "knowledge_refs": ["kc_001"],
+            "research_refs": ["insight_001"],
+            "production_profile": "simple",
+            "core_message": "Undercharging can protect against rejection.",
+            "problem": "The expert lowers price before being asked.",
+            "reframe": "Pricing can feel emotionally unsafe.",
+            "psychological_mechanism": "rejection_avoidance",
+            "key_points": ["Notice the emotion before naming the price."],
+            "hook": "You might not be undercharging because you're modest.",
+            "emotional_direction": "recognition to reflection",
+            "audience_takeaway": "Notice the emotion before naming your price.",
+            "cta": {"type": "none", "text": ""},
+        }
+        scenario = {
+            "schema_version": 2,
+            "entity": "Scenario",
+            "scenario_id": "scenario_001",
+            "account_id": "account_001",
+            "concept_id": "concept_001",
+            "production_profile": "simple",
+            "status": "ready",
+            "language": "en",
+            "title": "Pricing",
+            "hook": "You might not be undercharging because you're modest.",
+            "caption": "Pricing can feel unsafe.",
+            "duration_seconds": 8,
+            "scenes": [{
+                "scene_id": "scene_001",
+                "order": 1,
+                "duration_seconds": 8,
+                "voiceover_text": "",
+                "visual": {
+                    "type": "image",
+                    "generation_required": True,
+                    "prompt_en": "Minimal cinematic pricing scene.",
+                },
+                "text_overlay": None,
+                "subtitles": None,
+            }],
+            "assembly": {"transitions": False, "animation": "minimal"},
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            account_path = root / "account.json"
+            knowledge_path = root / "knowledge.json"
+            research_path = root / "research.json"
+            account_path.write_text(json.dumps(account), encoding="utf-8")
+            knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
+            research_path.write_text(json.dumps(research), encoding="utf-8")
+
+            account_root = root / "accounts" / "account_001"
+            account_root.mkdir(parents=True)
+            (account_root / "account.json").write_text(json.dumps(account), encoding="utf-8")
+            (account_root / "knowledge.json").write_text(json.dumps(knowledge), encoding="utf-8")
+
+            calls = []
+
+            def pipeline_runner(job_dir):
+                calls.append(Path(job_dir))
+                job_path = Path(job_dir) / "job.json"
+                job = json.loads(job_path.read_text(encoding="utf-8"))
+                job["status"] = "completed"
+                job["pipeline"]["output"] = "completed"
+                job["artifacts"]["output"] = str(Path(job_dir) / "output" / "final.mp4")
+                job_path.write_text(json.dumps(job), encoding="utf-8")
+                return True
+
+            insight_provider = StubResearchInsightProvider(insight)
+            orchestrator = ContentCreationOrchestrator(
+                idea_generator=ContentIdeaGenerator(StubIdeaProvider(idea)),
+                concept_generator=ContentConceptGenerator(StubConceptProvider(concept)),
+                scenario_generator=ScenarioGenerator(StubScenarioProvider(scenario)),
+                research_insight_generator=ResearchInsightGenerator(insight_provider),
+                pipeline_runner=pipeline_runner,
+                production_profile_store=ProductionProfileStore(
+                    Path(__file__).resolve().parents[1] / "data" / "production_profiles"
+                ),
+            )
+
+            result = orchestrator.create(
+                account_path=account_path,
+                knowledge_path=knowledge_path,
+                raw_research_paths=[research_path],
+                jobs_root=root / "jobs",
+                accounts_root=root / "accounts",
+                run=True,
+            )
+
+            self.assertEqual(result.status, "completed")
+            self.assertEqual(insight_provider.calls, 1)
+            self.assertEqual(len(calls), 1)
+            job = json.loads((result.job_dir / "job.json").read_text(encoding="utf-8"))
+            persisted_idea = json.loads(
+                (result.job_dir / "input" / "content_idea.json").read_text(encoding="utf-8")
+            )
+            persisted_concept = json.loads(
+                (result.job_dir / "content" / "content_concept.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(persisted_idea["research_refs"], ["insight_001"])
+            self.assertEqual(persisted_concept["research_refs"], ["insight_001"])
+            self.assertEqual(job["content"]["concept_id"], "concept_001")
 
     def test_rejects_unsupported_concept_profile_before_scenario_generation(self):
         account = {
