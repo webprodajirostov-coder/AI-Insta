@@ -121,6 +121,34 @@ class ContentCreationOrchestrator:
                 )
                 resolved_research_paths = [research_insights_path]
 
+            job_research_insights_path = None
+            if resolved_research_paths:
+                research_insights: list[dict[str, Any]] = []
+                for research_path in resolved_research_paths:
+                    payload = self._load_json(research_path)
+                    if "research_insights" in payload:
+                        insights = payload["research_insights"]
+                        if not isinstance(insights, list) or any(
+                            not isinstance(item, dict) for item in insights
+                        ):
+                            raise ValueError(
+                                "research_insights must be a list of objects: "
+                                f"{research_path}"
+                            )
+                        research_insights.extend(insights)
+                    else:
+                        research_insights.append(payload)
+
+                job_research_insights_path = workspace / "research_insights_for_job.json"
+                job_research_insights_path.write_text(
+                    json.dumps(
+                        {"research_insights": research_insights},
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+
             self.idea_orchestrator.generate(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
@@ -174,6 +202,7 @@ class ContentCreationOrchestrator:
                 scenario_output_path=scenario_path,
                 jobs_root=jobs_root,
                 accounts_root=accounts_root,
+                research_insights_path=job_research_insights_path,
             )
 
         if not run:
