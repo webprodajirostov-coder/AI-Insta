@@ -12,6 +12,8 @@ from src.content_idea_generator import ContentIdeaGenerator
 from src.content_idea_orchestrator import ContentIdeaOrchestrator
 from src.job_pipeline import run_pipeline
 from src.production_profile_store import ProductionProfileStore
+from src.research_insight_generator import ResearchInsightGenerator
+from src.research_insight_orchestrator import ResearchInsightOrchestrator
 from src.scenario_job_orchestrator import ScenarioJobOrchestrator
 from src.scenario_generator import ScenarioGenerator
 from src.scenario_llm_provider import LLMScenarioProvider
@@ -36,6 +38,7 @@ class ContentCreationOrchestrator:
         idea_generator: ContentIdeaGenerator,
         concept_generator: ContentConceptGenerator,
         scenario_generator: ScenarioGenerator,
+        research_insight_generator: ResearchInsightGenerator | None = None,
         pipeline_runner: Callable[[Path], bool] = run_pipeline,
         production_profile_store: ProductionProfileStore | None = None,
     ):
@@ -43,6 +46,11 @@ class ContentCreationOrchestrator:
         self.concept_orchestrator = ContentConceptOrchestrator(concept_generator)
         self.scenario_job_orchestrator = ScenarioJobOrchestrator(
             scenario_generator
+        )
+        self.research_insight_orchestrator = (
+            ResearchInsightOrchestrator(research_insight_generator)
+            if research_insight_generator is not None
+            else None
         )
         self.pipeline_runner = pipeline_runner
         self.production_profile_store = production_profile_store or ProductionProfileStore(
@@ -85,6 +93,7 @@ class ContentCreationOrchestrator:
         account_path: str | Path,
         knowledge_path: str | Path,
         research_paths: Sequence[str | Path] = (),
+        raw_research_paths: Sequence[str | Path] = (),
         jobs_root: str | Path = "data/jobs",
         accounts_root: str | Path = "data/accounts",
         run: bool = True,
@@ -92,15 +101,30 @@ class ContentCreationOrchestrator:
         with TemporaryDirectory(prefix="ai_insta_content_") as tmp:
             workspace = Path(tmp)
             ideas_path = workspace / "ideas.json"
+            research_insights_path = workspace / "research_insights.json"
             concepts_path = workspace / "concepts.json"
             idea_path = workspace / "content_idea.json"
             concept_path = workspace / "content_concept.json"
             scenario_path = workspace / "scenario.json"
 
+            resolved_research_paths = list(research_paths)
+
+            if raw_research_paths:
+                if self.research_insight_orchestrator is None:
+                    raise ValueError(
+                        "raw_research_paths require a ResearchInsightGenerator"
+                    )
+                self.research_insight_orchestrator.generate(
+                    account_path=account_path,
+                    research_paths=raw_research_paths,
+                    output_path=research_insights_path,
+                )
+                resolved_research_paths = [research_insights_path]
+
             self.idea_orchestrator.generate(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
-                research_paths=research_paths,
+                research_paths=resolved_research_paths,
                 output_path=ideas_path,
             )
             ideas = self._load_json(ideas_path).get("ideas", [])
@@ -118,7 +142,7 @@ class ContentCreationOrchestrator:
                 account_path=account_path,
                 knowledge_path=knowledge_path,
                 idea_path=idea_path,
-                research_paths=research_paths,
+                research_paths=resolved_research_paths,
                 output_path=concepts_path,
             )
             concepts = self._load_json(concepts_path).get("concepts", [])
