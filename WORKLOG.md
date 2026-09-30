@@ -1,5 +1,69 @@
 # AI-Insta — Worklog
 
+## 2026-09-30 — Checkpoint: Job ProductionProfile snapshot at audio execution
+
+### Goal
+
+Close the remaining execution-time configuration leak in the audio stage: after Job creation, audio generation must use the persisted Job ProductionProfile snapshot rather than re-reading the mutable global profile store.
+
+### Implemented
+
+Audio execution now loads the ProductionProfile through `load_job_production_profile()` in:
+
+- `src/audio_generator.py`;
+- `generate_audio()`;
+- `generate_mock_music()`.
+
+The previous runtime path from Scenario → `data/production_profiles/{profile}.json` was removed from audio generation.
+
+Regression coverage mutates the global `simple.json` after the Job snapshot is created and verifies that both music generation paths still follow the Job snapshot.
+
+### Validation
+
+Focused audio suite:
+
+`Ran 4 tests in 1.376s`
+
+`OK`
+
+Full regression suite:
+
+`Ran 143 tests in 47.084s`
+
+`OK`
+
+The full end-to-end pipeline also reached a completed Job with validated H.264/AAC 1080x1920 output.
+
+### Architectural inspection after the slice
+
+Current production execution paths inspected:
+
+- Audio reads the Job ProductionProfile snapshot.
+- Assembly reads the Job ProductionProfile snapshot.
+- Pipeline audio stage and dry-run read the Job ProductionProfile snapshot.
+- Visual execution consumes Scenario scene decisions and does not resolve ProductionProfile.
+- Scenario/Job creation uses the already resolved profile workspace artifact; it does not re-resolve a global profile at execution time.
+
+The only remaining static-profile lookup is the explicit compatibility fallback inside `load_job_production_profile()` for older Jobs that do not contain `production.profile_definition`. This is a legacy compatibility path, not the current Job contract.
+
+### Checkpoint
+
+**Status: complete.**
+
+### Next architectural question
+
+Decide whether to close the legacy compatibility fallback and make the Job ProductionProfile snapshot mandatory for all execution-time consumers.
+
+Before changing code, inspect all tests/fixtures that still create Jobs with only `production.profile` and no `production.profile_definition`.
+
+The intended contract is:
+
+`Job creation resolves ProductionProfile once → Job persists the snapshot → all execution stages consume only that snapshot`.
+
+Do not refactor unrelated pipeline code until this contract is closed.
+
+---
+
 This is the chronological record of meaningful architectural work. It records what was actually implemented and validated, not every chat message.
 
 ## 2026-09-30 — Checkpoint: canonical ProductionProfile resolution
