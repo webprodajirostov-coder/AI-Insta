@@ -177,10 +177,16 @@ class ResearchToConceptIntegrationTests(unittest.TestCase):
                 research_paths=[insights_path],
                 output_path=idea_path,
             )
+            persisted_idea_payload = json.loads(idea_path.read_text(encoding="utf-8"))
+            persisted_idea_for_concept = root / "idea_for_concept.json"
+            persisted_idea_for_concept.write_text(
+                json.dumps(persisted_idea_payload["ideas"][0]), encoding="utf-8"
+            )
+
             concept_orchestrator.generate(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
-                idea_path=idea_path,
+                idea_path=persisted_idea_for_concept,
                 research_paths=[insights_path],
                 output_path=concept_path,
             )
