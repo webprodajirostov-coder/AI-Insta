@@ -113,10 +113,9 @@ class ContentConceptGenerator:
             concept.setdefault("idea_id", idea["idea_id"])
             concept.setdefault("knowledge_refs", list(idea["knowledge_refs"]))
             concept.setdefault("research_refs", list(idea["research_refs"]))
-            concept.setdefault(
-                "production_profile",
-                idea["production"]["profile"],
-            )
+            # Production profile is a system-owned constraint inherited from
+            # ContentIdea, not a creative/provider decision.
+            concept["production_profile"] = idea["production"]["profile"]
             concept.setdefault("created_at", self._now())
             concept.setdefault("updated_at", concept["created_at"])
 
@@ -138,12 +137,6 @@ class ContentConceptGenerator:
                         f"ContentConcept {concept['concept_id']} must reference at least "
                         "one ResearchInsight when research insights are provided"
                     )
-
-            if concept["production_profile"] != idea["production"]["profile"]:
-                raise DomainValidationError(
-                    f"ContentConcept {concept['concept_id']} production_profile "
-                    "must match ContentIdea production profile"
-                )
 
             concepts.append(concept)
 
