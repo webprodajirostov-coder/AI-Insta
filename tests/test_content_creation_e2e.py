@@ -8,6 +8,7 @@ from src.content_concept_generator import ContentConceptGenerator
 from src.content_creation_orchestrator import ContentCreationOrchestrator
 from src.content_idea_generator import ContentIdeaGenerator
 from src.production_profile_store import ProductionProfileStore
+from src.research_insight_generator import ResearchInsightGenerator
 from src.scenario_generator import ScenarioGenerator
 from src.job_pipeline import run_pipeline
 
