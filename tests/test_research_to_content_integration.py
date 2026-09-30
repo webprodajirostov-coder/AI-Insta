@@ -86,11 +86,13 @@ class ResearchToConceptIntegrationTests(unittest.TestCase):
         }
         self.insight = {
             "insight_id": "insight_001",
+            "schema_version": 2,
             "account_id": "account_001",
             "status": "ready",
             "source": {
                 "type": "research",
                 "research_id": "research_001",
+                "material_refs": ["material_001"],
                 "reference": "material_001",
             },
             "topic": "pricing",
