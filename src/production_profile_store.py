@@ -77,17 +77,16 @@ class ProductionProfileStore:
 
         return profile
 
+
 def load_job_production_profile(
     job_dir: str | Path,
     job: Mapping[str, Any] | None = None,
-    *,
-    profiles_dir: str | Path = "data/production_profiles",
 ) -> dict[str, Any]:
-    """Load the ProductionProfile snapshot associated with a Job.
+    """Load the immutable ProductionProfile snapshot persisted in a Job.
 
-    Current Jobs persist the resolved profile definition in job.json. The
-    static profile store is retained only as a compatibility fallback for
-    older Jobs that predate the snapshot contract.
+    A Job is an execution boundary: once created, execution must use the
+    resolved ProductionProfile definition persisted with that Job. The static
+    profile store is used during Job creation, not re-resolved during runtime.
     """
     job_dir = Path(job_dir)
     if job is None:
@@ -101,17 +100,18 @@ def load_job_production_profile(
 
     production = job.get("production", {})
     snapshot = production.get("profile_definition")
-    if isinstance(snapshot, Mapping):
-        validate_production_profile(snapshot)
-        profile_id = production.get("profile")
-        if snapshot.get("profile_id") != profile_id:
-            raise DomainValidationError(
-                "Job ProductionProfile snapshot does not match job production.profile"
-            )
-        return dict(snapshot)
+    if not isinstance(snapshot, Mapping):
+        raise DomainValidationError(
+            "Job has no ProductionProfile snapshot: "
+            "production.profile_definition is required"
+        )
+
+    validate_production_profile(snapshot)
 
     profile_id = production.get("profile")
-    if not profile_id:
-        raise DomainValidationError("Job has no ProductionProfile")
+    if snapshot.get("profile_id") != profile_id:
+        raise DomainValidationError(
+            "Job ProductionProfile snapshot does not match job production.profile"
+        )
 
-    return ProductionProfileStore(profiles_dir).load(profile_id)
+    return dict(snapshot)
