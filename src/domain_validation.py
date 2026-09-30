@@ -106,6 +106,48 @@ def validate_knowledge(
             seen_ids.add(item_id)
 
 
+def validate_research(
+    research: Mapping[str, Any],
+    *,
+    account_id: str | None = None,
+) -> None:
+    research_id = _require(research, "research_id", "Research")
+    actual_account_id = _require(research, "account_id", "Research")
+
+    if account_id is not None and actual_account_id != account_id:
+        raise DomainValidationError(
+            f"Research {research_id} belongs to account "
+            f"{actual_account_id!r}, expected {account_id!r}"
+        )
+
+    _require(research, "status", "Research")
+    _require(research, "source", "Research")
+    _require(research, "subject", "Research")
+    _require(research, "material", "Research")
+
+    source = research["source"]
+    if not isinstance(source, Mapping):
+        raise DomainValidationError(
+            f"Research {research_id} source must be an object"
+        )
+
+    material = research["material"]
+    if not isinstance(material, list):
+        raise DomainValidationError(
+            f"Research {research_id} material must be a list"
+        )
+
+    for index, item in enumerate(material):
+        if not isinstance(item, Mapping):
+            raise DomainValidationError(
+                f"Research {research_id} material[{index}] must be an object"
+            )
+        if not isinstance(item.get("id"), str) or not item["id"].strip():
+            raise DomainValidationError(
+                f"Research {research_id} material[{index}] must contain a non-empty id"
+            )
+
+
 def validate_research_insight(
     insight: Mapping[str, Any],
     *,
