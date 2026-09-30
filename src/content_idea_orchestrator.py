@@ -46,7 +46,18 @@ class ContentIdeaOrchestrator:
 
         research_insights: list[dict[str, Any]] = []
         for research_path in research_paths:
-            research_insights.append(self._load_json(research_path))
+            payload = self._load_json(research_path)
+            if "research_insights" in payload:
+                insights = payload["research_insights"]
+                if not isinstance(insights, list) or any(
+                    not isinstance(item, dict) for item in insights
+                ):
+                    raise ValueError(
+                        f"research_insights must be a list of objects: {research_path}"
+                    )
+                research_insights.extend(insights)
+            else:
+                research_insights.append(payload)
 
         result = self.generator.generate(
             account=account,
