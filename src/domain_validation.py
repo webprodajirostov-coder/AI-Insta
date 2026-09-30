@@ -163,7 +163,24 @@ def validate_research_insight(
         )
 
     _require(insight, "status", "ResearchInsight")
-    _require(insight, "source", "ResearchInsight")
+    source = _require(insight, "source", "ResearchInsight")
+    if not isinstance(source, Mapping):
+        raise DomainValidationError(
+            f"ResearchInsight {insight_id} source must be an object"
+        )
+
+    schema_version = insight.get("schema_version", 1)
+    if schema_version == 2:
+        material_refs = source.get("material_refs")
+        if not isinstance(material_refs, list) or not material_refs:
+            raise DomainValidationError(
+                f"ResearchInsight {insight_id} source.material_refs must be a non-empty list"
+            )
+        if any(not isinstance(ref, str) or not ref.strip() for ref in material_refs):
+            raise DomainValidationError(
+                f"ResearchInsight {insight_id} source.material_refs must contain non-empty strings"
+            )
+
     _require(insight, "topic", "ResearchInsight")
     _require(insight, "observation", "ResearchInsight")
     _require(insight, "evidence", "ResearchInsight")
