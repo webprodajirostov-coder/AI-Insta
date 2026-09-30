@@ -10,13 +10,15 @@ It does **not** replace the detailed architecture/product documents. It tells us
 
 **Branch:** `feature/scenario-generation-orchestration`
 
-**Latest repository checkpoint:** `c14adc2` — `Fix remaining production profile test path`
+**Latest repository checkpoint:** `1f9045b` — `Record audio profile snapshot checkpoint`
 
-**Runtime validation:** `139 tests — OK`
+**Runtime validation:** `143 tests — OK`
 
 The current architectural slice is complete:
 
 `ContentIdea → ContentConcept → canonical ProductionProfile → Scenario → Job → Production Pipeline`
+
+The Job now persists the resolved ProductionProfile definition as an execution snapshot, and audio execution consumes that snapshot instead of re-reading the mutable global profile store.
 
 The canonical production-profile resolution is now owned by `ContentCreationOrchestrator` through `ProductionProfileStore.resolve_for_account()`. Callers no longer choose an arbitrary profile path.
 
@@ -34,19 +36,17 @@ Execution chain:
 
 ## Next action
 
-Before changing code, inspect the bridge:
+Inspect and close the remaining legacy compatibility path around the Job ProductionProfile snapshot.
 
-- `src/scenario_job_orchestrator.py`
-- `src/job_service.py`
-- `src/scenario_generator.py`
-- related Scenario/Job orchestration tests
-- current end-to-end content-creation tests
+Current execution-time consumers use `load_job_production_profile()` and therefore consume the persisted `job.production.profile_definition` snapshot. The only remaining static lookup is the compatibility fallback for older Jobs that have `production.profile` but no `production.profile_definition`.
+
+Before changing code, inspect all tests/fixtures that still create Jobs without the snapshot.
 
 Question to answer:
 
-> After canonical profile resolution, does ScenarioJobOrchestrator consume the exact validated Scenario + ProductionProfile and create the Job without re-resolving, regenerating, or introducing a second source of truth?
+> Can the current Job contract now require `production.profile_definition` unconditionally, with the static profile store removed from execution-time fallback?
 
-If the contract is clean, continue to the next missing architectural boundary. Do not refactor PipelineOrchestrator without a concrete contract violation.
+If yes, make that the next smallest architectural slice. Do not refactor unrelated pipeline code.
 
 ## Architectural invariants
 
