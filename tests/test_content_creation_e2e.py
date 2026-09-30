@@ -36,6 +36,14 @@ class StubScenarioProvider:
         return [self.scenario]
 
 
+class StubResearchInsightProvider:
+    def __init__(self, insight):
+        self.insight = insight
+
+    def generate_research_insights(self, **kwargs):
+        return [self.insight]
+
+
 class ContentCreationE2ETests(unittest.TestCase):
     def test_content_creation_reaches_completed_final_asset(self):
         account = {
@@ -58,6 +66,34 @@ class ContentCreationE2ETests(unittest.TestCase):
             "psychological_mechanisms": [],
             "content_pillars": [],
         }
+        research = {
+            "research_id": "research_e2e",
+            "account_id": "account_e2e",
+            "status": "ready",
+            "source": {"type": "competitor", "reference": "competitor_e2e"},
+            "subject": "competitor pricing content",
+            "material": [{
+                "id": "material_e2e",
+                "type": "post",
+                "text": "Pricing content repeatedly addresses rejection.",
+            }],
+        }
+        insight = {
+            "insight_id": "insight_e2e",
+            "account_id": "account_e2e",
+            "status": "ready",
+            "source": {
+                "type": "research",
+                "research_id": "research_e2e",
+                "reference": "material_e2e",
+            },
+            "topic": "pricing",
+            "observation": "Competitor content repeatedly links pricing hesitation with rejection.",
+            "evidence": ["material_e2e"],
+            "relevance": "This gives the account a concrete audience pain to explore.",
+            "content_implications": ["Explore rejection avoidance behind undercharging."],
+            "confidence": 0.8,
+        }
         idea = {
             "idea_id": "idea_e2e",
             "account_id": "account_e2e",
@@ -72,7 +108,7 @@ class ContentCreationE2ETests(unittest.TestCase):
             "hook_direction": "Reveal the hidden reason.",
             "why_now": "Pricing is often treated as tactics only.",
             "knowledge_refs": ["kc_e2e"],
-            "research_refs": [],
+            "research_refs": ["insight_e2e"],
             "production": {"profile": "simple"},
         }
         concept = {
@@ -86,6 +122,11 @@ class ContentCreationE2ETests(unittest.TestCase):
             "emotional_direction": "recognition to reflection",
             "audience_takeaway": "Notice the emotion before naming the price.",
             "cta": {"type": "none", "text": ""},
+            "account_id": "account_e2e",
+            "idea_id": "idea_e2e",
+            "knowledge_refs": ["kc_e2e"],
+            "research_refs": ["insight_e2e"],
+            "production_profile": "simple",
         }
         scenario = {
             "schema_version": 2,
@@ -129,9 +170,11 @@ class ContentCreationE2ETests(unittest.TestCase):
 
             account_path = root / "account_input.json"
             knowledge_path = root / "knowledge_input.json"
+            research_path = root / "research_input.json"
 
             account_path.write_text(json.dumps(account), encoding="utf-8")
             knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
+            research_path.write_text(json.dumps(research), encoding="utf-8")
 
             def pipeline_runner(job_dir):
                 job_dir = Path(job_dir)
@@ -181,6 +224,9 @@ class ContentCreationE2ETests(unittest.TestCase):
                 scenario_generator=ScenarioGenerator(
                     StubScenarioProvider(scenario)
                 ),
+                research_insight_generator=ResearchInsightGenerator(
+                    StubResearchInsightProvider(insight)
+                ),
                 pipeline_runner=pipeline_runner,
                 production_profile_store=ProductionProfileStore(
                     Path(__file__).resolve().parents[1] / "data" / "production_profiles"
@@ -190,6 +236,7 @@ class ContentCreationE2ETests(unittest.TestCase):
             result = orchestrator.create(
                 account_path=account_path,
                 knowledge_path=knowledge_path,
+                raw_research_paths=[research_path],
                 jobs_root=root / "jobs",
                 accounts_root=root / "accounts",
                 run=True,
@@ -208,6 +255,17 @@ class ContentCreationE2ETests(unittest.TestCase):
             )
 
             self.assertEqual(job["status"], "completed")
+
+            persisted_research = json.loads(
+                (job_dir / "research" / "research_insights.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(
+                persisted_research["research_insights"][0]["insight_id"],
+                "insight_e2e",
+            )
+
             self.assertEqual(
                 job["pipeline"],
                 {
