@@ -1,3 +1,88 @@
+## 2026-09-30 — Checkpoint: System-owned ContentConcept ProductionProfile + second real E2E
+
+### Goal
+
+Close the ownership leak where the LLM could return a ContentConcept `production_profile` that differed from the canonical ContentIdea profile, then validate the fix through the real product entry point.
+
+### Implemented
+
+Branch:
+
+`feature/concept-profile-ownership`
+
+Commits:
+
+- `2376286b0b313d00b8acbdcd059b8b49e92b03bf` — `Make ContentConcept production profile system-owned`
+- `92a6a8396b75056be732640cf6ae231e4ca92447` — `Test system-owned ContentConcept profile`
+
+The ContentConcept generator now unconditionally inherits `production_profile` from `ContentIdea.production.profile`. Provider output cannot override this system-owned constraint.
+
+Regression coverage now verifies that a provider returning an intentionally wrong profile is overridden by the Idea profile.
+
+### Real product smoke
+
+Command:
+
+`python -m src.create_content --account sales_psychology_001 --research data/research/sales_psychology_001/research_smoke_001.json`
+
+Job:
+
+`20260930_212719`
+
+Initial run correctly:
+
+- generated mock music;
+- submitted one real ODIRouter/Kling visual generation request;
+- persisted the visual as `generating`;
+- returned `CONTENT CREATION: WAITING`.
+
+After the Replit session was reloaded, the Job was resumed with:
+
+`python3 -m src.job_pipeline data/jobs/20260930_212719`
+
+The pipeline detected the already completed Job and validated the persisted final output rather than creating another production run.
+
+### Final validation
+
+- Job status: `completed`
+- output validation: `OK`
+- video: H.264
+- resolution: 1080x1920
+- duration: 8.0s
+- audio: AAC
+- final file: `data/jobs/20260930_212719/output/final.mp4`
+- size: 345330 bytes
+
+### Architectural conclusion
+
+The ContentConcept production profile mismatch that previously blocked real smoke is closed.
+
+The canonical ownership is now:
+
+`ContentIdea.production.profile → ContentConcept.production_profile`
+
+The provider is responsible for semantic/creative ContentConcept content, while the system owns production constraints.
+
+The real smoke proves that this boundary survives the full path into Scenario/Job and does not prevent real production.
+
+### Test status
+
+The focused ContentConcept test and the full unittest suite were **not rerun after the latest two commits**. The real product smoke passed.
+
+### Next step
+
+Before implementing another feature:
+
+1. run the focused ContentConcept tests and full unittest suite on this branch;
+2. inspect the current LLM ContentConcept provider contract;
+3. remove `production_profile` from the provider's requested creative output responsibility so the LLM is no longer asked to generate a system-owned field;
+4. inspect the generated Job/final Reel for the smallest remaining product-quality or contract gap;
+5. reconcile stale documentation and record the next explicit slice.
+
+Do not add Instagram scraping/API, analytics, learning, STANDARD/ADVANCED profiles, or another orchestration layer yet.
+
+---
+
 ## 2026-09-30 — Checkpoint: First real provider-backed content unit
 
 ### Goal
