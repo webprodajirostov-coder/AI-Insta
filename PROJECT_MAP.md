@@ -7,7 +7,9 @@ Account
   ↓
 Knowledge
   ↓
-Research / ResearchInsight
+Research
+  ↓
+ResearchInsight
   ↓
 ContentIdea
   ↓
@@ -50,6 +52,9 @@ The first production format is vertical short-form video. The architecture is in
 
 - Account
 - Knowledge input
+- Research input contract
+- ResearchInsight generation and persistence
+- ResearchInsight references through ContentIdea and ContentConcept
 - ContentIdea generation
 - ContentConcept generation
 - ContentConcept → ProductionProfile compatibility validation
@@ -57,10 +62,40 @@ The first production format is vertical short-form video. The architecture is in
 - Scenario generation
 - ContentCreationOrchestrator
 - Scenario → Job orchestration
+- ResearchInsight context persisted into Job
 
-### Planned / not yet the current focus
+### Current vertical slice
 
-- ResearchInsight automation
+The full controlled E2E path is validated:
+
+```
+Raw Research
+    ↓
+ResearchInsight
+    ↓
+ContentIdea
+    ↓
+ContentConcept
+    ↓
+ProductionProfile
+    ↓
+Scenario
+    ↓
+Job
+    ↓
+Audio / Visual
+    ↓
+Assembly
+    ↓
+validated final.mp4
+```
+
+Current regression suite: **155 tests — OK**.
+
+### Planned / not yet current focus
+
+- real product smoke validation with configured external providers
+- source-specific Research collectors (for example Instagram/competitor collection)
 - richer strategy engine
 - STANDARD profile
 - ADVANCED profile
@@ -73,8 +108,9 @@ The first production format is vertical short-form video. The architecture is in
 create_content
     ↓
 ContentCreationOrchestrator
-    ├─ ContentIdeaGenerator
-    ├─ ContentConceptGenerator
+    ├─ ResearchInsightOrchestrator
+    ├─ ContentIdeaOrchestrator
+    ├─ ContentConceptOrchestrator
     ├─ ProductionProfileStore
     └─ ScenarioJobOrchestrator
              ↓
@@ -97,16 +133,22 @@ Content Creation is a high-level orchestration boundary. It prepares content art
 |---|---|
 | Account | Account-specific identity, audience, strategy and production support |
 | Knowledge | Reusable account knowledge |
+| Research | Raw/source research material |
+| ResearchInsight | Normalized research finding usable by content intelligence |
 | ContentIdea | Candidate content direction |
 | ContentConcept | Production-ready creative direction |
 | ProductionProfile | Production capability and constraints |
-| Scenario | Concrete scene-level production decisions |
+| Scenario | Concrete production decisions |
 | MediaAsset | Generated/resolved media state |
 | AssemblyPlan | Resolved instructions for combining assets |
 | FinalAsset | Validated final output |
 | Job | Execution state/envelope |
 
 ## 5. Critical boundaries
+
+### Research → ResearchInsight
+
+Research is raw/source material. ResearchInsight normalizes useful findings for later content decisions.
 
 ### Content intelligence → production
 
@@ -136,6 +178,7 @@ Each Job owns:
 
 - job.json
 - input content artifacts
+- research context when supplied
 - media assets
 - assembly plan
 - output
@@ -152,6 +195,8 @@ ProductionProfileStore resolves and validates that profile against the Account.
 
 Scenario generation receives the resolved profile.
 
+Job persists the resolved ProductionProfile definition as an execution snapshot.
+
 This is the current canonical path:
 
 ```
@@ -166,6 +211,10 @@ validated ProductionProfile
 ScenarioGenerator
              ↓
 Scenario
+             ↓
+Job.production.profile_definition
+             ↓
+execution stages
 ```
 
 ## 8. Production lifecycle
