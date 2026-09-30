@@ -121,6 +121,45 @@ class ContentIdeaOrchestratorTests(unittest.TestCase):
                     output_path=root / "ideas.json",
                 )
 
+    def test_research_insight_envelope_is_unpacked(self):
+        insight = {
+            "insight_id": "insight_001",
+            "account_id": "account_001",
+            "status": "ready",
+            "source": {"type": "research"},
+            "topic": "pricing",
+            "observation": "Pricing hesitation can involve rejection avoidance.",
+            "evidence": ["Observed."],
+            "relevance": "Relevant.",
+            "content_implications": ["Explore it."],
+            "confidence": 0.8,
+        }
+        idea = dict(self.idea, research_refs=["insight_001"])
+        provider = StubProvider([idea])
+        orchestrator = ContentIdeaOrchestrator(ContentIdeaGenerator(provider))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            account_path = self._write(root, "account.json", self.account)
+            knowledge_path = self._write(root, "knowledge.json", self.knowledge)
+            research_path = self._write(
+                root,
+                "insights.json",
+                {"research_insights": [insight]},
+            )
+
+            orchestrator.generate(
+                account_path=account_path,
+                knowledge_path=knowledge_path,
+                research_paths=[research_path],
+                output_path=root / "ideas.json",
+            )
+
+            self.assertEqual(
+                provider.last_inputs[2][0]["insight_id"],
+                "insight_001",
+            )
+
     def test_research_inputs_are_forwarded_as_domain_objects(self):
         insight = {
             "insight_id": "insight_001",
