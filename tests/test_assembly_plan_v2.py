@@ -6,6 +6,10 @@ from pathlib import Path
 from src.assembly import build_assembly_plan
 from src.assembly_renderer import render_assembly
 from src.domain_validation import DomainValidationError
+from src.production_profile_store import ProductionProfileStore
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class AssemblyPlanV2Tests(unittest.TestCase):
@@ -18,7 +22,12 @@ class AssemblyPlanV2Tests(unittest.TestCase):
         job = {
             "job_id": "job_001",
             "account_id": "account_001",
-            "production": {"profile": "simple"},
+            "production": {
+                "profile": "simple",
+                "profile_definition": ProductionProfileStore(
+                    ROOT / "data" / "production_profiles"
+                ).load("simple"),
+            },
         }
         scenario = {
             "schema_version": 2,
@@ -124,7 +133,6 @@ class AssemblyPlanV2Tests(unittest.TestCase):
             )
             self.assertNotIn("generation_required", scene["visual"])
             self.assertNotIn("prompt_en", scene["visual"])
-
 
             self.assertEqual(
                 plan["inputs"]["audio"]["music"]["asset_id"],
