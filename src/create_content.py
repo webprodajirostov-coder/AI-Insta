@@ -8,7 +8,9 @@ from src.content_creation_orchestrator import ContentCreationOrchestrator
 from src.content_idea_generator import ContentIdeaGenerator
 from src.llm_content_concept_provider import LLMContentConceptProvider
 from src.llm_content_idea_provider import LLMContentIdeaProvider
+from src.llm_research_insight_provider import LLMResearchInsightProvider
 from src.odirouter_llm_provider import ODIRouterLLMProvider
+from src.research_insight_generator import ResearchInsightGenerator
 from src.scenario_generator import ScenarioGenerator
 from src.scenario_llm_provider import LLMScenarioProvider
 
@@ -29,7 +31,13 @@ def main() -> None:
         "--research",
         action="append",
         default=[],
-        help="Optional ResearchInsight JSON path. May be supplied multiple times.",
+        help="Optional raw Research JSON path. May be supplied multiple times.",
+    )
+    parser.add_argument(
+        "--research-insight",
+        action="append",
+        default=[],
+        help="Optional persisted ResearchInsight JSON path. May be supplied multiple times.",
     )
     parser.add_argument("--model", default="gemini-2.5-flash")
     parser.add_argument("--jobs-root", default="data/jobs")
@@ -48,14 +56,19 @@ def main() -> None:
             LLMContentConceptProvider(llm)
         ),
         scenario_generator=ScenarioGenerator(LLMScenarioProvider(llm)),
+        research_insight_generator=ResearchInsightGenerator(
+            LLMResearchInsightProvider(llm)
+        ),
     )
 
-    research_paths = [ROOT / path for path in args.research]
+    raw_research_paths = [ROOT / path for path in args.research]
+    research_paths = [ROOT / path for path in args.research_insight]
 
     result = orchestrator.create(
         account_path=account_path,
         knowledge_path=knowledge_path,
         research_paths=research_paths,
+        raw_research_paths=raw_research_paths,
         jobs_root=ROOT / args.jobs_root,
         accounts_root=ROOT / "data" / "accounts",
         run=not args.no_run,
