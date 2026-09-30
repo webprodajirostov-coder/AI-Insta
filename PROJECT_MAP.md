@@ -92,9 +92,11 @@ validated final.mp4
 
 Current regression suite: **155 tests — OK**.
 
+Real product smoke: **completed on 2026-09-30** with configured external providers, including asynchronous Kling visual generation and resume/poll.
+
 ### Planned / not yet current focus
 
-- real product smoke validation with configured external providers
+- product hardening and inspection of the first real generated content unit
 - source-specific Research collectors (for example Instagram/competitor collection)
 - richer strategy engine
 - STANDARD profile
