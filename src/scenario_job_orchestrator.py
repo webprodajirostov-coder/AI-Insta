@@ -37,6 +37,7 @@ class ScenarioJobOrchestrator:
         scenario_output_path: str | Path,
         jobs_root: str | Path = "data/jobs",
         accounts_root: str | Path = "data/accounts",
+        research_insights_path: str | Path | None = None,
     ) -> Path:
         content_idea_path = Path(content_idea_path)
         content_concept_path = Path(content_concept_path)
@@ -73,11 +74,15 @@ class ScenarioJobOrchestrator:
         )
         scenario_bundle_path.unlink(missing_ok=True)
 
-        return self.job_creator(
-            content_idea_path=content_idea_path,
-            content_concept_path=content_concept_path,
-            scenario_path=scenario_output_path,
-            production_profile_path=production_profile_path,
-            jobs_root=jobs_root,
-            accounts_root=accounts_root,
-        )
+        job_kwargs = {
+            "content_idea_path": content_idea_path,
+            "content_concept_path": content_concept_path,
+            "scenario_path": scenario_output_path,
+            "production_profile_path": production_profile_path,
+            "jobs_root": jobs_root,
+            "accounts_root": accounts_root,
+        }
+        if research_insights_path is not None:
+            job_kwargs["research_insights_path"] = Path(research_insights_path)
+
+        return self.job_creator(**job_kwargs)
