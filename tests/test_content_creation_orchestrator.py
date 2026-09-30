@@ -366,6 +366,15 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             )
             self.assertEqual(persisted_idea["research_refs"], ["insight_001"])
             self.assertEqual(persisted_concept["research_refs"], ["insight_001"])
+            persisted_research = json.loads(
+                (result.job_dir / "research" / "research_insights.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(
+                persisted_research["research_insights"][0]["insight_id"],
+                "insight_001",
+            )
             self.assertEqual(job["content"]["concept_id"], "concept_001")
 
     def test_rejects_unsupported_concept_profile_before_scenario_generation(self):
