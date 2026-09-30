@@ -34,7 +34,9 @@ Keep ContentConcept above the media-production layer. Do NOT include:
 caption, voiceover, visual, audio, scenario, or scenes.
 
 Preserve the ContentIdea account_id and idea_id.
-Preserve its knowledge_refs, research_refs, and production profile unless there is a clear validation-safe reason not to.
+Preserve its knowledge_refs and research_refs exactly from the ContentIdea.
+The production profile is inherited from the ContentIdea: copy ContentIdea.production.profile exactly into ContentConcept.production_profile. Do not choose, infer, replace, or optimize the production profile.
+The returned production_profile MUST be exactly equal to ContentIdea.production.profile.
 Use only references supplied by the input.
 Do not invent research evidence or present a research observation as established fact."""
     
@@ -75,7 +77,8 @@ Do not invent research evidence or present a research observation as established
             "IMPORTANT: ids from hooks, content_patterns, messaging, or other "
             "Knowledge sections are not valid knowledge_refs. Preserve the "
             "ContentIdea knowledge_refs and use only the explicit VALID "
-            "KNOWLEDGE_REF IDS list."
+            "KNOWLEDGE_REF IDS list. The production profile is not a creative "
+            "choice at this stage: copy CONTENT IDEA production.profile exactly."
         )
 
         result = self.llm.generate_structured(
