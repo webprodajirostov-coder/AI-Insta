@@ -85,12 +85,16 @@ class ContentConceptGeneratorTests(unittest.TestCase):
         with self.assertRaises(DomainValidationError):
             self._generate([broken])
 
-    def test_rejects_profile_mismatch(self):
+    def test_provider_profile_is_overridden_by_idea_profile(self):
         broken = dict(self.base_concept)
         broken["production_profile"] = "advanced"
 
-        with self.assertRaises(DomainValidationError):
-            self._generate([broken])
+        result = self._generate([broken])
+
+        self.assertEqual(
+            result.concepts[0]["production_profile"],
+            self.idea["production"]["profile"],
+        )
 
     def test_rejects_unknown_knowledge_reference(self):
         broken = dict(self.base_concept)
