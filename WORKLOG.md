@@ -1,3 +1,78 @@
+## 2026-09-30 — Checkpoint: First real provider-backed content unit
+
+### Goal
+
+Validate the completed vertical slice through the public content-creation entry point with a real Research input and configured external providers, rather than only controlled test doubles.
+
+### Runtime smoke
+
+Command:
+
+python -m src.create_content --account sales_psychology_001 --research data/research/sales_psychology_001/research_smoke_001.json
+
+The initial run created Job 20260930_145833 and correctly stopped at visual waiting after submitting a real ODIRouter/Kling task.
+
+Resume was performed through:
+
+python -m src.job_pipeline data/jobs/20260930_145833
+
+The existing visual asset was polled rather than regenerated. The Job then completed Assembly, rendering and output validation.
+
+### Result
+
+Validated real path:
+
+Raw Research → ResearchInsight → ContentIdea → ContentConcept → ProductionProfile → Scenario → Job → Audio → Kling Visual → resume/poll → Assembly → Render → Output validation
+
+Final output:
+
+- Job: data/jobs/20260930_145833
+- status: completed
+- video: H.264
+- resolution: 1080x1920
+- duration: 8.0s
+- audio: AAC
+- final file: output/final.mp4
+
+This is the first real provider-backed validation of the complete product path.
+
+### Architectural conclusions
+
+- The public create_content entry point can drive a real content unit from Research to final asset.
+- ResearchInsight generation is connected to downstream content intelligence and Job validation.
+- ContentConcept production-profile inheritance is enforced at the provider boundary rather than by weakening domain validation.
+- Job ProductionProfile snapshot remains authoritative during execution.
+- Visual generation has real asynchronous waiting/resume behavior.
+- Existing generating/READY visual state is reused; no duplicate visual generation was created during resume.
+- Assembly receives resolved READY assets only.
+- Rendering remains outside asset generation.
+- The current production architecture does not need another orchestration layer to complete this path.
+
+### What is proven vs. what remains
+
+Proven by real smoke:
+
+- external LLM-backed ResearchInsight generation;
+- downstream Idea/Concept/Scenario/Job creation;
+- real ODIRouter/Kling visual generation;
+- waiting/resume/poll behavior;
+- Assembly → render → output validation;
+- completed Job terminal state.
+
+Still primarily test/fixture-level:
+
+- broader Research source ingestion and collectors;
+- content-quality evaluation of generated Ideas/Concepts/Scenarios;
+- repeated multi-account/product usage at product scale;
+- STANDARD/ADVANCED production profiles;
+- publish, analytics and learning layers.
+
+### Next step
+
+Do an architecture/product checkpoint against the first real content unit before implementing another feature. Inspect the generated Job artifacts and final Reel, reconcile stale documentation, identify the smallest real product bottleneck, and explicitly keep later roadmap layers out of scope.
+
+---
+
 # AI-Insta — Worklog
 
 ## 2026-09-30 — Checkpoint: Research → ResearchInsight → Content → FinalAsset vertical slice
