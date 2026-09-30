@@ -5,6 +5,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.job_pipeline import run_ready_pipeline
+from src.production_profile_store import ProductionProfileStore
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class VisualLifecycleTests(unittest.TestCase):
@@ -57,6 +61,12 @@ class VisualLifecycleTests(unittest.TestCase):
             "job_id": "job_test",
             "account_id": "account_test",
             "status": "created",
+            "production": {
+                "profile": "simple",
+                "profile_definition": ProductionProfileStore(
+                    ROOT / "data" / "production_profiles"
+                ).load("simple"),
+            },
             "pipeline": {
                 "research": "pending",
                 "analysis": "pending",
