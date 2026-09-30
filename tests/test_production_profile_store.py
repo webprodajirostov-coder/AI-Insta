@@ -114,3 +114,22 @@ class ProductionProfileStoreTests(unittest.TestCase):
 
             with self.assertRaises(DomainValidationError):
                 load_job_production_profile(job_dir)
+
+    def test_job_profile_snapshot_is_required(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            job_dir = Path(tmp)
+            job = {
+                "production": {
+                    "profile": "simple",
+                }
+            }
+            (job_dir / "job.json").write_text(
+                json.dumps(job),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                DomainValidationError,
+                "production.profile_definition is required",
+            ):
+                load_job_production_profile(job_dir)
