@@ -71,7 +71,7 @@ class ResearchInsightGenerator:
                 )
 
             insight = dict(raw_insight)
-            insight.setdefault("schema_version", 1)
+            insight.setdefault("schema_version", 2)
             insight.setdefault("entity", "ResearchInsight")
             insight.setdefault("status", "ready")
             insight.setdefault("account_id", account_id)
@@ -89,6 +89,39 @@ class ResearchInsightGenerator:
                 raise DomainValidationError(
                     f"ResearchInsight {insight.get('insight_id', '<unknown>')} "
                     "must reference one of the supplied Research records"
+                )
+
+            source_material_refs = source.get("material_refs")
+            if not isinstance(source_material_refs, list) or not source_material_refs:
+                raise DomainValidationError(
+                    f"ResearchInsight {insight.get('insight_id', '<unknown>')} "
+                    "must provide source.material_refs"
+                )
+            if any(
+                not isinstance(ref, str) or not ref.strip()
+                for ref in source_material_refs
+            ):
+                raise DomainValidationError(
+                    f"ResearchInsight {insight.get('insight_id', '<unknown>')} "
+                    "source.material_refs must contain non-empty strings"
+                )
+
+            research_by_id = {
+                item["research_id"]: item
+                for item in sources
+            }
+            material_ids = {
+                item["id"]
+                for item in research_by_id[source_research_id]["material"]
+            }
+            unknown_material_refs = [
+                ref for ref in source_material_refs if ref not in material_ids
+            ]
+            if unknown_material_refs:
+                raise DomainValidationError(
+                    f"ResearchInsight {insight.get('insight_id', '<unknown>')} "
+                    "references unknown Research material ids: "
+                    f"{unknown_material_refs!r}"
                 )
 
             validate_research_insight(insight, account_id=account_id)
