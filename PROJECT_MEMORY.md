@@ -10,15 +10,17 @@ It does **not** replace the detailed architecture/product documents. It tells us
 
 **Branch:** `feature/scenario-generation-orchestration`
 
-**Latest repository checkpoint:** `64904a8` — `Fix ResearchInsight generator import in E2E test`
+**Latest repository checkpoint:** `6f35513e9f68eb066a0145bcc117d88dee67a5de` — `Add valid Research smoke input for product E2E`
 
 **Runtime validation:** `155 tests — OK`
+
+**Real product smoke:** Job `20260930_145833` completed successfully with configured ODIRouter LLM + Kling visual provider.
 
 The current validated vertical slice is:
 
 `Raw Research → ResearchInsight → ContentIdea → ContentConcept → ProductionProfile → Scenario → Job → Audio/Visual → Assembly → validated final MP4`
 
-The latest E2E test confirms this full path, including persistence of ResearchInsight context inside the Job.
+The latest E2E test confirms this full path, including persistence of ResearchInsight context inside the Job. A real product smoke also completed the same path from valid Research through real ResearchInsight generation, ContentIdea/Concept generation, Scenario/Job creation, asynchronous Kling visual generation, resume/poll, Assembly, rendering and final output validation.
 
 The Job persists the resolved ProductionProfile definition as an execution snapshot. Execution-time consumers use that Job snapshot rather than re-resolving mutable global production profiles.
 
@@ -56,15 +58,15 @@ Research input should remain source-agnostic. Instagram/competitor collectors ca
 
 ## Next action
 
-Run a real product smoke test through:
+Perform an architecture/product checkpoint against the successful real smoke:
 
-`python -m src.create_content --account ... --research ...`
+1. verify which contracts are proven by real providers versus only by tests;
+2. inspect the generated Job artifacts and final Reel for product-quality gaps;
+3. reconcile PRODUCT_SPEC / ROADMAP / PROJECT_MAP with the actual implementation and remove stale checkpoint language;
+4. identify the smallest next product bottleneck;
+5. explicitly record what is out of scope for the next slice.
 
-using a valid Research JSON input and the configured LLM/provider environment.
-
-Inspect the resulting Job and final MP4. Record any runtime/provider issues as the next concrete product gaps.
-
-If the real smoke path succeeds, make the next checkpoint around the first usable content unit rather than expanding the architecture.
+The architectural path is proven. Do not add Instagram scraping/API, analytics, learning, STANDARD/ADVANCED profiles, or another orchestration layer merely because the vertical slice is complete.
 
 ## Architectural invariants
 
