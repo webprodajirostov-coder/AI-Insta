@@ -11,6 +11,7 @@ from src.domain_validation import (
     validate_content_idea,
     validate_knowledge,
     validate_knowledge_refs,
+    validate_account_hook,
     validate_research_insight,
     validate_research_refs,
 )
@@ -119,6 +120,12 @@ class ContentConceptGenerator:
             )
             concept.setdefault("created_at", self._now())
             concept.setdefault("updated_at", concept["created_at"])
+
+            validate_account_hook(
+                account,
+                concept["hook"],
+                label=f"ContentConcept {concept['concept_id']}",
+            )
 
             validate_content_concept(
                 concept,
