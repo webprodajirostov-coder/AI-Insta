@@ -43,7 +43,7 @@ Do not add a Scenario-level audio object: audio requirements are defined by the 
 
 Use JSON primitive types exactly: booleans must be true/false, not arrays or strings.
 Respect the supplied Account language, ContentConcept, and ProductionProfile exactly.
-The Scenario hook MUST follow the Account content_rules.hooks target_word_count exactly. Do not expand the ContentConcept hook beyond that range; preserve its core message while staying within the Account rule.
+Use the Account hook guidance as a creative target: keep the Scenario hook concise and clear, preserve the ContentConcept's core message, and adapt wording naturally for the production format. Do not force an exact word count.
 Do not invent account_id, concept_id, or production_profile values."""
 
     def __init__(self, llm: LLMProvider):
