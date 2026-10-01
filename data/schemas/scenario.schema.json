@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "entity": "Scenario",
 
   "scenario_id": "scenario_001",
@@ -14,28 +14,23 @@
   "hook": "",
   "caption": "",
 
-  "visual": {
-    "type": "image",
-    "generation_required": false,
-    "prompt_en": ""
-  },
-
-  "text_overlay": {
-    "text": "",
-    "position": "center",
-    "animation": "minimal"
-  },
-
-  "audio": {
-    "tts": false,
-    "music": true
-  },
-
-  "subtitles": {
-    "enabled": false
-  },
-
   "duration_seconds": 8,
+
+  "scenes": [
+    {
+      "scene_id": "scene_001",
+      "order": 1,
+      "duration_seconds": 8,
+      "voiceover_text": "",
+      "visual": {
+        "type": "image",
+        "generation_required": true,
+        "prompt_en": ""
+      },
+      "text_overlay": null,
+      "subtitles": null
+    }
+  ],
 
   "assembly": {
     "transitions": false,

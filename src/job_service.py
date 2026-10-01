@@ -1,3 +1,5 @@
+"""Execution Job service: validates content inputs and creates an isolated Job directory."""
+
 import json
 import shutil
 from datetime import datetime
@@ -30,6 +32,7 @@ def create_job(
     production_profile_path,
     jobs_root="data/jobs",
     accounts_root="data/accounts",
+    research_insights_path=None,
 ):
     content_idea_path = Path(content_idea_path)
     content_concept_path = Path(content_concept_path)
@@ -42,6 +45,14 @@ def create_job(
     concept = load_json(content_concept_path)
     scenario = load_json(scenario_path)
     profile = load_json(production_profile_path)
+
+    research_insights = None
+    if research_insights_path is not None:
+        research_payload = load_json(research_insights_path)
+        if "research_insights" in research_payload:
+            research_insights = research_payload["research_insights"]
+        else:
+            research_insights = [research_payload]
 
     account_id = idea["account_id"]
     account_path = accounts_root / account_id / "account.json"
@@ -63,6 +74,7 @@ def create_job(
         concept=concept,
         scenario=scenario,
         profile=profile,
+        research_insights=research_insights,
     )
 
     idea_id = idea["idea_id"]
@@ -107,6 +119,12 @@ def create_job(
         job_dir / "content" / "scenario.json",
     )
 
+    if research_insights_path is not None:
+        shutil.copy2(
+            research_insights_path,
+            job_dir / "research" / "research_insights.json",
+        )
+
     pipeline = {
         stage: "pending"
         for stage in PIPELINE_STAGES
@@ -129,6 +147,7 @@ def create_job(
         },
         "production": {
             "profile": profile_id,
+            "profile_definition": profile,
         },
         "pipeline": pipeline,
         "artifacts": {
@@ -149,7 +168,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 5:
         print(
-            "Usage: python -m src.job_creator "
+            "Usage: python -m src.job_service "
             "<content_idea.json> "
             "<content_concept.json> "
             "<scenario.json> "

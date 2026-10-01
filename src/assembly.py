@@ -1,7 +1,10 @@
 import json
 from pathlib import Path
-from src.asset_resolver import resolve_visual_asset
+
+from src.asset_resolver import resolve_visual_asset_for_scene
 from src.audio_resolver import resolve_audio_asset
+from src.domain_validation import validate_production_profile, validate_scenario_v2
+from src.production_profile_store import load_job_production_profile
 
 
 def load_json(path):
@@ -46,54 +49,78 @@ def build_assembly_plan(job_dir):
     job = load_json(job_dir / "job.json")
     scenario = load_json(job_dir / "content" / "scenario.json")
 
-    profile_name = scenario["production_profile"]
-    profile_path = Path("data/production_profiles") / f"{profile_name}.json"
-    profile = load_json(profile_path)
+    if scenario.get("schema_version") != 2:
+        raise ValueError("Assembly requires Scenario v2")
 
-    music_asset_path = None
+    profile = load_job_production_profile(job_dir, job)
 
-    if scenario["audio"]["music"]:
-        music_asset_id = find_asset_id(job_dir, "music")
-        music_asset_path = str(
-            resolve_audio_asset(job_dir, music_asset_id)
+    validate_production_profile(profile)
+    validate_scenario_v2(scenario, profile)
+
+    scenes = scenario["scenes"]
+    if not scenes:
+        raise ValueError("Scenario has no scenes")
+
+    plan_scenes = []
+
+    for scene in scenes:
+        visual = scene["visual"]
+        resolved_visual = resolve_visual_asset_for_scene(job_dir, scene)
+
+        plan_scenes.append(
+            {
+                "scene_id": scene["scene_id"],
+                "order": scene["order"],
+                "duration_seconds": scene["duration_seconds"],
+                "voiceover_text": scene["voiceover_text"],
+                "visual": {
+                    "type": visual["type"],
+                    "asset_id": resolved_visual["asset_id"],
+                    "asset_path": resolved_visual["asset_path"],
+                },
+                "text_overlay": scene["text_overlay"],
+                "subtitles": scene["subtitles"],
+            }
         )
 
-    visual_asset_id = find_asset_id(job_dir, scenario["visual"]["type"])
-    visual_asset_path = resolve_visual_asset(job_dir, visual_asset_id)
+    music_asset_id = None
+    music_asset_path = None
+    if profile["audio"]["music"]:
+        music_asset_id = find_asset_id(job_dir, "music")
+        music_asset_path = str(resolve_audio_asset(job_dir, music_asset_id))
+
+    tts_asset_id = None
+    tts_asset_path = None
+    if profile["audio"]["tts"]:
+        tts_asset_id = find_asset_id(job_dir, "tts")
+        tts_asset_path = str(resolve_audio_asset(job_dir, tts_asset_id))
 
     plan = {
-        "schema_version": 1,
+        "schema_version": 2,
         "entity": "AssemblyPlan",
         "job_id": job["job_id"],
         "scenario_id": scenario["scenario_id"],
         "production_profile": profile["profile_id"],
         "language": scenario["language"],
-
+        "scenes": plan_scenes,
         "inputs": {
-            "visual": {
-                "type": scenario["visual"]["type"],
-                "generation_required": scenario["visual"]["generation_required"],
-                "prompt_en": scenario["visual"]["prompt_en"],
-                "asset_id": visual_asset_id,
-                "asset_path": str(visual_asset_path)
-            },
             "audio": {
                 "tts": {
-                    "enabled": scenario["audio"]["tts"],
-                    "asset_path": None
+                    "enabled": profile["audio"]["tts"],
+                    "asset_id": tts_asset_id,
+                    "asset_path": tts_asset_path,
                 },
                 "music": {
-                    "enabled": scenario["audio"]["music"],
-                    "asset_path": music_asset_path
-                }
+                    "enabled": profile["audio"]["music"],
+                    "asset_id": music_asset_id,
+                    "asset_path": music_asset_path,
+                },
             },
             "text": {
                 "hook": scenario["hook"],
-                "overlay": scenario["text_overlay"]["text"],
-                "caption": scenario["caption"]
-            }
+                "caption": scenario["caption"],
+            },
         },
-
         "settings": {
             "duration_seconds": scenario["duration_seconds"],
             "transitions": scenario["assembly"]["transitions"],
@@ -102,13 +129,12 @@ def build_assembly_plan(job_dir):
             "subtitles": profile["text"]["subtitles"],
             "dynamic_subtitles": profile["text"]["dynamic_subtitles"],
             "tts": profile["audio"]["tts"],
-            "music": profile["audio"]["music"]
+            "music": profile["audio"]["music"],
         },
-
         "output": {
             "format": "mp4",
-            "path": str(job_dir / "output" / "final.mp4")
-        }
+            "path": str(job_dir / "output" / "final.mp4"),
+        },
     }
 
     assembly_dir = job_dir / "assembly"

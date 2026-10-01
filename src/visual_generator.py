@@ -38,7 +38,16 @@ def generate_visual(
     job = load_json(job_dir / "job.json")
     scenario = load_json(job_dir / "content" / "scenario.json")
 
-    visual = scenario["visual"]
+    if scenario.get("schema_version") != 2:
+        raise ValueError("Visual generation requires Scenario v2")
+
+    scenes = scenario["scenes"]
+    if len(scenes) != 1:
+        raise ValueError(
+            "Current Simple Renderer vertical slice requires exactly one scene"
+        )
+
+    visual = scenes[0]["visual"]
 
     if not visual["generation_required"]:
         print("VISUAL GENERATION: SKIPPED")
@@ -52,7 +61,8 @@ def generate_visual(
     # Existing assets are authoritative.
     if assets:
         ready = [
-            item for item in assets
+            item
+            for item in assets
             if item[1].get("status") == "ready"
         ]
 
@@ -70,7 +80,8 @@ def generate_visual(
             )
 
         active = [
-            item for item in assets
+            item
+            for item in assets
             if item[1].get("status") in {"pending", "generating"}
         ]
 
@@ -91,7 +102,8 @@ def generate_visual(
             )
 
         failed = [
-            item for item in assets
+            item
+            for item in assets
             if item[1].get("status") == "failed"
         ]
 
@@ -114,7 +126,6 @@ def generate_visual(
     else:
         asset_id = f"visual_{len(assets) + 1:03d}"
         asset_path = asset_dir / f"{asset_id}.json"
-
         existing_asset = None
 
     asset = {
@@ -126,7 +137,7 @@ def generate_visual(
         "status": "pending",
         "source": {
             "provider": provider,
-            "prompt": visual["prompt_en"],
+            "prompt": visual.get("prompt_en"),
         },
         "path": None,
         "metadata": {
@@ -140,7 +151,7 @@ def generate_visual(
         image_provider = ODIRouterImageProvider()
 
         result = image_provider.submit(
-            prompt=visual["prompt_en"],
+            prompt=visual.get("prompt_en"),
             resolution=resolution,
             aspect_ratio=aspect_ratio,
             n=1,

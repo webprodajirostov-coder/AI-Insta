@@ -44,25 +44,33 @@ def run_assembly(job_dir):
     if plan.get("entity") != "AssemblyPlan":
         raise ValueError("Invalid AssemblyPlan entity")
 
+    if plan.get("schema_version") != 2:
+        raise ValueError("Assembly requires AssemblyPlan v2")
+
     if plan.get("job_id") != load_json(job_dir / "job.json").get("job_id"):
         raise ValueError("AssemblyPlan job_id mismatch")
 
-    visual_path = ensure_path_inside_job(
-        job_dir,
-        plan["inputs"]["visual"].get("asset_path"),
-        "Visual asset",
-    )
+    scenes = plan.get("scenes")
+    if not isinstance(scenes, list) or not scenes:
+        raise ValueError("AssemblyPlan has no scenes")
+
+    for scene in scenes:
+        visual_path = ensure_path_inside_job(
+            job_dir,
+            scene["visual"].get("asset_path"),
+            f"Visual asset for scene {scene['scene_id']}",
+        )
+
+        if visual_path and not visual_path.exists():
+            raise FileNotFoundError(
+                f"Visual asset does not exist: {visual_path}"
+            )
 
     music_path = ensure_path_inside_job(
         job_dir,
         plan["inputs"]["audio"]["music"].get("asset_path"),
         "Music asset",
     )
-
-    if visual_path and not visual_path.exists():
-        raise FileNotFoundError(
-            f"Visual asset does not exist: {visual_path}"
-        )
 
     if music_path and not music_path.exists():
         raise FileNotFoundError(
@@ -77,7 +85,11 @@ def run_assembly(job_dir):
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     print("ASSEMBLY INPUTS: OK")
-    print(f"VISUAL: {visual_path}")
+    for scene in scenes:
+        print(
+            f"SCENE {scene['order']}: "
+            f"{scene['scene_id']} -> {scene['visual'].get('asset_path')}"
+        )
     print(f"MUSIC:  {music_path}")
     print(f"OUTPUT: {output_path}")
 

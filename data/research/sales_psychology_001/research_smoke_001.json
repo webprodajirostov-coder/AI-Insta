@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "entity": "ResearchRecord",
+
+  "research_id": "research_smoke_001",
+  "account_id": "sales_psychology_001",
+
+  "status": "completed",
+
+  "source": {
+    "type": "research_note",
+    "reference": "smoke_001",
+    "title": "Pricing hesitation and fear of rejection"
+  },
+
+  "subject": "Why experienced experts hesitate to name a higher price",
+
+  "material": [
+    {
+      "id": "material_001",
+      "type": "observation",
+      "content": "Experienced experts may hesitate to name a higher price when they anticipate rejection, judgment, or being perceived as greedy."
+    },
+    {
+      "id": "material_002",
+      "type": "observation",
+      "content": "Pricing hesitation can therefore be explored as a perceived social-risk response rather than only as a sales-skills problem."
+    }
+  ],
+
+  "created_at": "2026-09-30T00:00:00",
+  "updated_at": "2026-09-30T00:00:00"
+}

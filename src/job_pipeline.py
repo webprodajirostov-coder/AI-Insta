@@ -10,7 +10,7 @@ JOB_STATUS_TRANSITIONS = {
     "created": {"waiting", "failed"},
     "waiting": {"failed"},
     "completed": set(),
-    "failed": {"waiting"},
+    "failed": set(),
 }
 
 PIPELINE_STAGES = [
@@ -179,8 +179,7 @@ def complete_job_after_output_validation(job_dir):
     for stage in ("concept", "scenario", "audio", "visual", "assembly"):
         if job["pipeline"][stage] != "completed":
             raise ValueError(
-                f"Cannot complete job: {stage} is "
-                f"{job['pipeline'][stage]}"
+                f"Cannot complete job: {stage} is {job['pipeline'][stage]}"
             )
 
     job["pipeline"]["output"] = "completed"
@@ -260,7 +259,26 @@ def resolve_visual_stage(job_dir):
             candidates.append((asset_path, asset))
 
     if not candidates:
+        scenario = load_json(job_dir / "content" / "scenario.json")
+        scenes = scenario.get("scenes", [])
+
+        if not scenes:
+            raise ValueError("Scenario has no scenes for visual stage")
+
+        if len(scenes) != 1:
+            raise ValueError(
+                "Simple visual stage currently supports exactly one scene"
+            )
+
+        generation_required = scenes[0]["visual"]["generation_required"]
+
         print("VISUAL STAGE: NO ASSET")
+
+        if not generation_required:
+            print("ACTION: STOP")
+            print("REASON: visual generation is not required and no asset exists")
+            return "failed", None
+
         print("ACTION: GENERATE")
         return "generate", None
 
@@ -334,15 +352,59 @@ def run_visual_stage(job_dir):
     raise RuntimeError(f"Unsupported visual action: {action}")
 
 
+def _ready_audio_assets_by_type(job_dir):
+    job_dir = Path(job_dir)
+    assets_dir = job_dir / "media" / "audio"
+
+    ready = {}
+
+    for asset_path in assets_dir.glob("*.json"):
+        asset = load_json(asset_path)
+
+        if (
+            asset.get("entity") != "AudioAsset"
+            or asset.get("status") != "ready"
+        ):
+            continue
+
+        asset_type = asset.get("type")
+        if not asset_type:
+            continue
+
+        ready.setdefault(asset_type, []).append(
+            (asset_path, asset)
+        )
+
+    return ready
+
+
+def _get_single_ready_audio_asset(job_dir, audio_type):
+    ready = _ready_audio_assets_by_type(job_dir).get(audio_type, [])
+
+    if len(ready) > 1:
+        raise ValueError(
+            f"Multiple ready AudioAssets found for type={audio_type}: "
+            f"{[item[1].get('asset_id') for item in ready]}"
+        )
+
+    if not ready:
+        return None
+
+    return ready[0][1]
+
+
 def run_audio_stage(job_dir):
     job_dir = Path(job_dir)
 
     job = load_job(job_dir)
     scenario = load_json(job_dir / "content" / "scenario.json")
-    audio_config = scenario.get("audio", {})
+    from src.production_profile_store import load_job_production_profile
 
-    music_enabled = audio_config.get("music", False)
-    tts_enabled = audio_config.get("tts", False)
+    profile = load_job_production_profile(job_dir, job)
+    audio_config = profile["audio"]
+
+    music_enabled = audio_config["music"]
+    tts_enabled = audio_config["tts"]
 
     if not music_enabled and not tts_enabled:
         print("AUDIO STAGE: nothing enabled")
@@ -350,38 +412,26 @@ def run_audio_stage(job_dir):
 
     from src.audio_resolver import resolve_audio_asset
 
-    assets_dir = job_dir / "media" / "audio"
-    candidates = []
+    # Each enabled audio type is an independent requirement.
+    # A READY asset of another type must never satisfy it.
+    music_asset = (
+        _get_single_ready_audio_asset(job_dir, "music")
+        if music_enabled
+        else None
+    )
+    tts_asset = (
+        _get_single_ready_audio_asset(job_dir, "tts")
+        if tts_enabled
+        else None
+    )
 
-    for asset_path in assets_dir.glob("*.json"):
-        with open(asset_path, "r", encoding="utf-8") as f:
-            asset = json.load(f)
-
-        if asset.get("entity") == "AudioAsset":
-            candidates.append((asset_path, asset))
-
-    ready = [
-        item for item in candidates
-        if item[1].get("status") == "ready"
-    ]
-
-    if len(ready) > 1:
-        raise ValueError(
-            f"Multiple ready AudioAssets found: "
-            f"{[item[1].get('asset_id') for item in ready]}"
+    if tts_enabled and tts_asset is None:
+        raise RuntimeError(
+            "TTS is enabled, but no ready TTS AudioAsset exists "
+            "and no TTS audio provider is implemented"
         )
 
-    if len(ready) == 1:
-        asset_id = ready[0][1]["asset_id"]
-        audio_path = resolve_audio_asset(job_dir, asset_id)
-
-        print("AUDIO STAGE: READY")
-        print("ACTION: SKIP GENERATION")
-        print("FILE:", audio_path)
-
-        return "completed"
-
-    if music_enabled:
+    if music_enabled and music_asset is None:
         from src.audio_generator import generate_mock_music
 
         print("AUDIO STAGE: NO READY MUSIC")
@@ -389,137 +439,46 @@ def run_audio_stage(job_dir):
 
         generate_mock_music(
             job_dir,
-            duration_seconds=scenario.get("duration_seconds", 8),
+            duration_seconds=scenario["duration_seconds"],
         )
 
-        ready = [
-            item
-            for item in assets_dir.glob("*.json")
-            if load_json(item).get("entity") == "AudioAsset"
-            and load_json(item).get("status") == "ready"
-        ]
+        music_asset = _get_single_ready_audio_asset(job_dir, "music")
 
-        if len(ready) != 1:
-            raise RuntimeError("Audio generation did not produce one ready AudioAsset")
+        if music_asset is None:
+            raise RuntimeError(
+                "Music generation did not produce a ready music AudioAsset"
+            )
 
-        asset_id = load_json(ready[0])["asset_id"]
-        audio_path = resolve_audio_asset(job_dir, asset_id)
-
-        print("AUDIO STAGE: COMPLETED")
-        print("FILE:", audio_path)
-
-        return "completed"
+    if music_enabled:
+        music_path = resolve_audio_asset(
+            job_dir,
+            music_asset["asset_id"],
+        )
+        print("AUDIO: music READY")
+        print("FILE:", music_path)
 
     if tts_enabled:
-        raise RuntimeError(
-            "TTS is enabled, but no TTS audio provider is implemented"
+        tts_path = resolve_audio_asset(
+            job_dir,
+            tts_asset["asset_id"],
         )
+        print("AUDIO: tts READY")
+        print("FILE:", tts_path)
 
-    return "skipped"
+    print("AUDIO STAGE: COMPLETED")
+    return "completed"
 
 
 def run_ready_pipeline(job_dir):
-    job_dir = Path(job_dir)
-    job = load_job(job_dir)
-    validate_job(job)
+    """Run a production-ready Job through the canonical orchestrator.
 
-    if job.get("status") == "completed":
-        validate_completed_job(job_dir, job)
-        print("JOB: already completed")
-        return True
+    Kept as a compatibility entrypoint for callers of the historical
+    ready-pipeline API. Production orchestration lives exclusively in
+    PipelineOrchestrator.
+    """
+    from src.pipeline_orchestrator import PipelineOrchestrator
 
-    materialize_preproduction_stages(job_dir)
-
-    print("===== READY PIPELINE =====")
-
-    # AUDIO
-    if job["pipeline"]["audio"] == "completed":
-        print("AUDIO: already completed")
-    else:
-        from src.audio_resolver import resolve_audio_asset
-
-        assets_dir = job_dir / "media" / "audio"
-        candidates = []
-
-        for asset_path in assets_dir.glob("*.json"):
-            with open(asset_path, "r", encoding="utf-8") as f:
-                asset = json.load(f)
-
-            if asset.get("entity") == "AudioAsset":
-                candidates.append((asset_path, asset))
-
-        if not candidates:
-            raise FileNotFoundError(
-                f"No AudioAsset found in: {assets_dir}"
-            )
-
-        ready = [
-            item for item in candidates
-            if item[1].get("status") == "ready"
-        ]
-
-        if len(ready) == 1:
-            audio_asset = ready[0][1]
-        elif len(ready) > 1:
-            raise ValueError(
-                f"Multiple ready AudioAssets found: "
-                f"{[item[1].get('asset_id') for item in ready]}"
-            )
-        else:
-            raise RuntimeError("No ready AudioAsset found")
-
-        resolve_audio_asset(job_dir, audio_asset["asset_id"])
-        update_stage(job_dir, "audio", "completed")
-        print("AUDIO: completed")
-
-    # VISUAL
-    visual_result = run_visual_stage(job_dir)
-
-    if visual_result == "waiting":
-        update_stage(job_dir, "visual", "waiting")
-        update_job_state(job_dir, status="waiting")
-        print("VISUAL: waiting for provider")
-        return False
-
-    job = load_job(job_dir)
-
-    if job["pipeline"]["visual"] == "completed":
-        print("VISUAL: already completed")
-    else:
-        update_stage(job_dir, "visual", "completed")
-        print("VISUAL: completed")
-
-    # ASSEMBLY
-    job = load_job(job_dir)
-
-    if job["pipeline"]["assembly"] == "completed":
-        print("ASSEMBLY: already completed")
-    else:
-        from src.assembly import build_assembly_plan
-        from src.assembly_runner import run_assembly
-
-        build_assembly_plan(job_dir)
-        run_assembly(job_dir)
-        update_stage(job_dir, "assembly", "completed")
-        print("ASSEMBLY: completed")
-
-    # OUTPUT
-    job = load_job(job_dir)
-
-    if job["pipeline"]["output"] == "completed":
-        print("OUTPUT: already completed; finalizing lifecycle")
-    else:
-        print("OUTPUT: finalizing")
-
-    from src.finalizer import finalize
-
-    if not finalize(job_dir):
-        return False
-
-    print("OUTPUT: completed")
-
-    print("=========================")
-    return True
+    return PipelineOrchestrator(job_dir).run()
 
 def dry_run_pipeline(job_dir):
     job_dir = Path(job_dir)
@@ -532,7 +491,10 @@ def dry_run_pipeline(job_dir):
 
     # AUDIO STAGE
     scenario = load_json(job_dir / "content" / "scenario.json")
-    music_enabled = scenario.get("audio", {}).get("music", False)
+    from src.production_profile_store import load_job_production_profile
+
+    profile = load_job_production_profile(job_dir, job)
+    music_enabled = profile["audio"]["music"]
 
     if music_enabled:
         from src.audio_resolver import resolve_audio_asset
@@ -574,8 +536,8 @@ def dry_run_pipeline(job_dir):
         print("VISUAL: ready")
         print("ACTION: SKIP GENERATION")
 
-    elif visual_action == "pending":
-        print("VISUAL: pending")
+    elif visual_action == "generate":
+        print("VISUAL: no asset")
         print("ACTION: WOULD GENERATE")
         print("PROVIDER: odirouter")
         print("MODEL: kling-v3-image")
@@ -592,146 +554,12 @@ def dry_run_pipeline(job_dir):
     print("============================")
     return True
 
+
 def run_pipeline(job_dir):
-    job_dir = Path(job_dir)
+    """Run the full production pipeline through its orchestration boundary."""
+    from src.pipeline_orchestrator import PipelineOrchestrator
 
-    job = load_job(job_dir)
-    validate_job(job)
-
-    # Idempotency guard:
-    # a completed job must not rewrite its state or rerun any stage.
-    if job.get("status") == "completed":
-        validate_completed_job(job_dir, job)
-        output_path = job["artifacts"]["output"]
-
-        print("===== FULL PIPELINE =====")
-        print("JOB:", job["job_id"])
-        print("JOB STATUS: completed")
-        print("ACTION: SKIP — JOB ALREADY COMPLETED")
-        print("OUTPUT:", output_path)
-        print("========================")
-        return True
-
-    print("===== FULL PIPELINE =====")
-    print("JOB:", job["job_id"])
-
-    from src.update_job_stage import update_stage
-
-    active_stage = None
-
-    try:
-        materialize_preproduction_stages(job_dir)
-
-        # =========================
-        # AUDIO
-        # =========================
-        job = load_job(job_dir)
-
-        if job["pipeline"]["audio"] == "completed":
-            print("AUDIO: already completed")
-        else:
-            active_stage = "audio"
-            audio_result = run_audio_stage(job_dir)
-
-            if audio_result == "completed":
-                update_stage(job_dir, "audio", "completed")
-                print("AUDIO: completed")
-
-            elif audio_result == "skipped":
-                raise RuntimeError("Audio stage cannot be skipped")
-
-        # =========================
-        # VISUAL
-        # =========================
-        active_stage = "visual"
-        visual_action, visual_asset_id = resolve_visual_stage(job_dir)
-
-        if visual_action == "ready":
-            update_stage(job_dir, "visual", "completed")
-            print("VISUAL: completed")
-
-        elif visual_action in {"generate", "poll"}:
-            result = run_visual_stage(job_dir)
-
-            if result == "waiting":
-                update_stage(job_dir, "visual", "waiting")
-                update_job_state(job_dir, status="waiting")
-                print("VISUAL: waiting")
-                print("========================")
-                return False
-
-            update_stage(job_dir, "visual", "completed")
-            print("VISUAL: completed")
-
-        elif visual_action == "failed":
-            update_stage(job_dir, "visual", "failed")
-            raise RuntimeError("Visual stage failed")
-
-        # =========================
-        # ASSEMBLY
-        # =========================
-        active_stage = "assembly"
-        job = load_job(job_dir)
-
-        if job["pipeline"]["assembly"] != "completed":
-            from src.assembly import build_assembly_plan
-            from src.assembly_runner import run_assembly
-
-            print("ASSEMBLY: building plan")
-            build_assembly_plan(job_dir)
-
-            print("ASSEMBLY: validating inputs")
-            run_assembly(job_dir)
-
-            update_stage(job_dir, "assembly", "completed")
-            print("ASSEMBLY: completed")
-        else:
-            print("ASSEMBLY: already completed")
-
-        # =========================
-        # OUTPUT
-        # =========================
-        active_stage = "output"
-        job = load_job(job_dir)
-
-        if job["pipeline"]["output"] != "completed":
-            from src.finalizer import finalize
-
-            print("OUTPUT: rendering + validation")
-
-            if not finalize(job_dir):
-                update_job_state(
-                    job_dir,
-                    status="failed",
-                    error="Output finalization failed",
-                )
-                print("OUTPUT: failed")
-                return False
-
-            print("OUTPUT: completed")
-        else:
-            print("OUTPUT: already completed")
-
-        job = load_job(job_dir)
-        validate_completed_job(job_dir, job)
-
-        print("JOB STATUS: completed")
-        print("========================")
-        return True
-
-    except Exception as e:
-        if active_stage:
-            update_stage(job_dir, active_stage, "failed")
-
-        update_job_state(
-            job_dir,
-            status="failed",
-            error=e,
-        )
-        print("JOB STATUS: failed")
-        print("ERROR:", e)
-        print("========================")
-        return False
+    return PipelineOrchestrator(job_dir).run()
 
 def update_job_state(job_dir, status=None, output_path=None, error=None):
     job_dir = Path(job_dir)
@@ -791,6 +619,7 @@ def update_job_state(job_dir, status=None, output_path=None, error=None):
         json.dump(job, f, ensure_ascii=False, indent=2)
 
     return job
+
 
 if __name__ == "__main__":
     import sys

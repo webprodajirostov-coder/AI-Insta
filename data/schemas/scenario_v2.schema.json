@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "entity": "Scenario",
+  "scenario_id": "scenario_001",
+  "account_id": "sales_psychology_001",
+  "concept_id": "concept_001",
+  "production_profile": "simple",
+  "status": "ready",
+  "language": "en",
+  "title": "",
+  "hook": "",
+  "caption": "",
+  "duration_seconds": 8,
+  "scenes": [
+    {
+      "scene_id": "scene_001",
+      "order": 1,
+      "duration_seconds": 8,
+      "voiceover_text": "",
+      "visual": {
+        "type": "image",
+        "generation_required": true,
+        "prompt_en": ""
+      },
+      "text_overlay": {
+        "text": "",
+        "position": "center",
+        "animation": "minimal"
+      },
+      "subtitles": null
+    }
+  ],
+  "assembly": {
+    "transitions": false,
+    "animation": "minimal"
+  },
+  "created_at": "",
+  "updated_at": ""
+}

@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 from datetime import datetime
 
+from src.production_profile_store import load_job_production_profile
+
 
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -14,14 +16,15 @@ def generate_audio(job_dir, audio_type="tts", provider="mock"):
     job = load_json(job_dir / "job.json")
     scenario = load_json(job_dir / "content" / "scenario.json")
 
-    audio = scenario.get("audio", {})
+    profile = load_job_production_profile(job_dir, job)
+    audio = profile["audio"]
 
     if audio_type == "tts":
-        enabled = audio.get("tts", False)
+        enabled = audio["tts"]
         text = scenario.get("voiceover") or scenario.get("caption", "")
         voice = None
     elif audio_type == "music":
-        enabled = audio.get("music", False)
+        enabled = audio["music"]
         text = None
         voice = None
     else:
@@ -69,7 +72,9 @@ def generate_mock_music(job_dir, duration_seconds=8):
     job = load_json(job_dir / "job.json")
     scenario = load_json(job_dir / "content" / "scenario.json")
 
-    if not scenario.get("audio", {}).get("music", False):
+    profile = load_job_production_profile(job_dir, job)
+
+    if not profile["audio"]["music"]:
         print("AUDIO GENERATION: SKIPPED (music disabled)")
         return None
 
