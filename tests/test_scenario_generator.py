@@ -32,7 +32,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
         scenario = {
             "schema_version": 2,
             "title": "The Hidden Reason You Undercharge",
-            "hook": "You might not be undercharging because you're modest.",
+            "hook": "You might not be undercharging because you're afraid of rejection.",
             "caption": "Sometimes the lower price is about safety.",
             "duration_seconds": 8,
             "scenes": [
@@ -79,6 +79,19 @@ class ScenarioGeneratorTests(unittest.TestCase):
         self.assertEqual(scenario["scenario_id"], "scenario_001")
         self.assertEqual(len(scenario["scenes"]), 1)
 
+    def test_rejects_provider_hook_outside_account_word_count(self):
+        with self.assertRaisesRegex(DomainValidationError, "requires 10-12 words"):
+            ScenarioGenerator(
+                StubScenarioProvider([
+                    self._valid(
+                        hook="Still think you need more sales scripts? Your pricing problem isn't skill, it's social risk."
+                    )
+                ])
+            ).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
     def test_rejects_provider_missing_schema_version(self):
         scenario = self._valid()
         del scenario["schema_version"]
