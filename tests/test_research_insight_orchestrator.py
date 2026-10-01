@@ -39,8 +39,10 @@ class ResearchInsightOrchestratorTests(unittest.TestCase):
         }
         self.insight = {
             "insight_id": "insight_001",
+            "schema_version": 2,
             "source": {
                 "research_id": "research_001",
+                "material_refs": ["item_001"],
                 "type": "competitor_analysis",
                 "reference": "competitor_001",
             },

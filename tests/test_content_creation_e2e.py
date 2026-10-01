@@ -83,9 +83,11 @@ class ContentCreationE2ETests(unittest.TestCase):
             "insight_id": "insight_e2e",
             "account_id": "account_e2e",
             "status": "ready",
+            "schema_version": 2,
             "source": {
                 "type": "research",
                 "research_id": "research_e2e",
+                "material_refs": ["material_e2e"],
                 "reference": "material_e2e",
             },
             "topic": "pricing",

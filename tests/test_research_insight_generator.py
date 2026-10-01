@@ -43,8 +43,10 @@ class ResearchInsightGeneratorTests(unittest.TestCase):
         }
         self.insight = {
             "insight_id": "insight_001",
+            "schema_version": 2,
             "source": {
                 "research_id": "research_001",
+                "material_refs": ["item_001"],
                 "type": "competitor_analysis",
                 "reference": "competitor_001",
             },
@@ -87,6 +89,32 @@ class ResearchInsightGeneratorTests(unittest.TestCase):
     def test_rejects_insight_from_unknown_research(self):
         broken = dict(self.insight)
         broken["source"] = dict(broken["source"], research_id="missing")
+        provider = StubProvider([broken])
+
+        with self.assertRaises(DomainValidationError):
+            ResearchInsightGenerator(provider).generate(
+                account=self.account,
+                research=[self.research],
+            )
+
+    def test_rejects_unknown_research_material_reference(self):
+        broken = dict(self.insight)
+        broken["source"] = dict(
+            broken["source"],
+            material_refs=["missing_material"],
+        )
+        provider = StubProvider([broken])
+
+        with self.assertRaises(DomainValidationError):
+            ResearchInsightGenerator(provider).generate(
+                account=self.account,
+                research=[self.research],
+            )
+
+    def test_rejects_missing_material_references(self):
+        broken = dict(self.insight)
+        broken["source"] = dict(broken["source"])
+        broken["source"].pop("material_refs")
         provider = StubProvider([broken])
 
         with self.assertRaises(DomainValidationError):
