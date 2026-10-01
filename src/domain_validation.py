@@ -14,48 +14,6 @@ def _require(entity: Mapping[str, Any], field: str, label: str) -> Any:
     return value
 
 
-def validate_account_hook(account: Mapping[str, Any], hook: str, *, label: str) -> None:
-    """Validate a hook against the Account content-rule word-count range."""
-    if not isinstance(hook, str) or not hook.strip():
-        raise DomainValidationError(f"{label} hook must be a non-empty string")
-
-    content_rules = account.get("content_rules", {})
-    if not isinstance(content_rules, Mapping):
-        return
-    hooks = content_rules.get("hooks", {})
-    if not isinstance(hooks, Mapping):
-        return
-    target = hooks.get("target_word_count")
-    if target is None:
-        return
-    if not isinstance(target, str):
-        raise DomainValidationError(
-            f"Account {account.get('account_id', '<unknown>')} hooks.target_word_count "
-            "must be a string"
-        )
-
-    import re
-    match = re.fullmatch(r"\s*(\d+)\s*-\s*(\d+)\s+words?\s*", target)
-    if not match:
-        raise DomainValidationError(
-            f"Account {account.get('account_id', '<unknown>')} hooks.target_word_count "
-            f"has unsupported format: {target!r}"
-        )
-
-    minimum, maximum = (int(value) for value in match.groups())
-    if minimum > maximum:
-        raise DomainValidationError(
-            f"Account {account.get('account_id', '<unknown>')} hooks.target_word_count "
-            "minimum cannot exceed maximum"
-        )
-
-    word_count = len(hook.split())
-    if not minimum <= word_count <= maximum:
-        raise DomainValidationError(
-            f"{label} hook contains {word_count} words, but Account "
-            f"{account.get('account_id', '<unknown>')} requires {minimum}-{maximum} words"
-        )
-
 def validate_account(account: Mapping[str, Any]) -> None:
     account_id = _require(account, "account_id", "Account")
     _require(account, "version", "Account")
