@@ -94,7 +94,7 @@ class ContentCreationOrchestratorTests(unittest.TestCase):
             "reframe": "The problem may be emotional safety.",
             "psychological_mechanism": "rejection_avoidance",
             "key_points": ["Notice the emotion before naming the price."],
-            "hook": "You might not be undercharging because you're modest.",
+            "hook": "You might not be undercharging because you're afraid of rejection.",
             "emotional_direction": "recognition to reflection",
             "audience_takeaway": "Notice the emotion before naming the price.",
             "cta": {"type": "none", "text": ""},
