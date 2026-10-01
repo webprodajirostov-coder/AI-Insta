@@ -6,11 +6,13 @@ from moviepy import (
     CompositeVideoClip,
     ImageClip,
     TextClip,
+    vfx,
 )
 
 
 TARGET_WIDTH = 1080
 TARGET_HEIGHT = 1920
+FADE_IN_DURATION = 0.4
 
 
 def load_json(path):
@@ -47,6 +49,18 @@ def overlay_position(position):
         "bottom": ("center", 1600),
     }
     return positions.get(position, ("center", "center"))
+
+
+def apply_overlay_animation(text_clip, animation):
+    if animation == "fade_in":
+        return text_clip.with_effects([vfx.FadeIn(FADE_IN_DURATION)])
+
+    if animation in {None, "", "minimal"}:
+        return text_clip
+
+    raise ValueError(
+        f"Unsupported text overlay animation: {animation!r}"
+    )
 
 
 def render_assembly(job_dir):
@@ -146,6 +160,10 @@ def render_assembly(job_dir):
             )
             .with_duration(duration)
             .with_position(overlay_position(overlay.get("position")))
+        )
+        text_clip = apply_overlay_animation(
+            text_clip,
+            overlay.get("animation"),
         )
         layers.append(text_clip)
 
