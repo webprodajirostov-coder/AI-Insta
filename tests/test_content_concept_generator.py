@@ -35,7 +35,7 @@ class ContentConceptGeneratorTests(unittest.TestCase):
             "reframe": "Pricing can be emotionally safer than it feels.",
             "psychological_mechanism": "rejection_avoidance",
             "key_points": ["Notice the emotion before naming the price."],
-            "hook": "You might not be undercharging because you're modest.",
+            "hook": "You might not be undercharging because you're afraid of rejection.",
             "emotional_direction": "recognition to reflection",
             "audience_takeaway": "Notice what happens in your body before naming your price.",
             "cta": {"type": "none", "text": ""},
@@ -62,6 +62,16 @@ class ContentConceptGeneratorTests(unittest.TestCase):
             self.idea["production"]["profile"],
         )
 
+    def test_rejects_hook_outside_account_word_count(self):
+        broken = dict(self.base_concept)
+        broken["hook"] = "This hook is intentionally far too long for the account rule."
+
+        with self.assertRaisesRegex(DomainValidationError, "requires 10-12 words"):
+            self._generate([broken])
+
+    def test_accepts_hook_inside_account_word_count(self):
+        result = self._generate()
+        self.assertEqual(len(result.concepts[0]["hook"].split()), 10)
     def test_rejects_cross_account_idea(self):
         broken = dict(self.idea)
         broken["account_id"] = "other_account"
