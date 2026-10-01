@@ -134,6 +134,15 @@ class ScenarioGenerator:
                 account_id=account_id,
                 concept_id=concept["concept_id"],
             )
+
+            for scene in scenario["scenes"]:
+                if scene["visual"]["generation_required"] is not True:
+                    raise DomainValidationError(
+                        f"Scenario provider item {index} must set "
+                        "Scene.visual.generation_required=true for every "
+                        "execution-ready generated Scenario"
+                    )
+
             generated.append(scenario)
 
         return ScenarioGenerationResult(tuple(generated))

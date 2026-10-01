@@ -11,7 +11,7 @@ class ScenarioV2ValidationTests(unittest.TestCase):
             "status": "active",
             "visual": {
                 "count": 1,
-                "types": ["image", "video"],
+                "types": ["image"],
                 "generation_required": False,
             },
             "audio": {"tts": False, "music": True},
@@ -101,6 +101,18 @@ class ScenarioV2ValidationTests(unittest.TestCase):
         broken["scenes"] = [dict(self.scenario["scenes"][0])]
         broken["scenes"][0]["visual"] = {
             "type": "ai_video",
+            "generation_required": True,
+            "prompt_en": "Test prompt",
+        }
+
+        with self.assertRaises(DomainValidationError):
+            validate_scenario_v2(broken, self.profile)
+
+    def test_rejects_video_visual_type_when_simple_profile_is_image_only(self):
+        broken = dict(self.scenario)
+        broken["scenes"] = [dict(self.scenario["scenes"][0])]
+        broken["scenes"][0]["visual"] = {
+            "type": "video",
             "generation_required": True,
             "prompt_en": "Test prompt",
         }

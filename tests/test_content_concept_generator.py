@@ -35,7 +35,7 @@ class ContentConceptGeneratorTests(unittest.TestCase):
             "reframe": "Pricing can be emotionally safer than it feels.",
             "psychological_mechanism": "rejection_avoidance",
             "key_points": ["Notice the emotion before naming the price."],
-            "hook": "You might not be undercharging because you're modest.",
+            "hook": "You might not be undercharging because you're afraid of rejection.",
             "emotional_direction": "recognition to reflection",
             "audience_takeaway": "Notice what happens in your body before naming your price.",
             "cta": {"type": "none", "text": ""},
@@ -62,6 +62,21 @@ class ContentConceptGeneratorTests(unittest.TestCase):
             self.idea["production"]["profile"],
         )
 
+    def test_accepts_short_hook(self):
+        short = dict(self.base_concept)
+        short["hook"] = "Fear can quietly shape pricing."
+
+        result = self._generate([short])
+        self.assertEqual(result.concepts[0]["hook"], short["hook"])
+
+    def test_accepts_longer_hook(self):
+        longer = dict(self.base_concept)
+        longer["hook"] = (
+            "Undercharging can be a way to avoid feeling exposed when asking for more."
+        )
+
+        result = self._generate([longer])
+        self.assertEqual(result.concepts[0]["hook"], longer["hook"])
     def test_rejects_cross_account_idea(self):
         broken = dict(self.idea)
         broken["account_id"] = "other_account"

@@ -32,7 +32,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
         scenario = {
             "schema_version": 2,
             "title": "The Hidden Reason You Undercharge",
-            "hook": "You might not be undercharging because you're modest.",
+            "hook": "You might not be undercharging because you're afraid of rejection.",
             "caption": "Sometimes the lower price is about safety.",
             "duration_seconds": 8,
             "scenes": [
@@ -43,7 +43,7 @@ class ScenarioGeneratorTests(unittest.TestCase):
                     "voiceover_text": "",
                     "visual": {
                         "type": "image",
-                        "generation_required": False,
+                        "generation_required": True,
                         "prompt_en": "Cinematic vertical portrait.",
                     },
                     "text_overlay": {
@@ -79,6 +79,28 @@ class ScenarioGeneratorTests(unittest.TestCase):
         self.assertEqual(scenario["scenario_id"], "scenario_001")
         self.assertEqual(len(scenario["scenes"]), 1)
 
+    def test_accepts_short_provider_hook(self):
+        result = ScenarioGenerator(
+            StubScenarioProvider([self._valid(hook="Fear can quietly shape pricing.")])
+        ).generate(
+            account=self.account,
+            concept=self.concept,
+            production_profile=self.profile,
+        )
+        self.assertEqual(result.scenarios[0]["hook"], "Fear can quietly shape pricing.")
+
+    def test_accepts_longer_provider_hook(self):
+        hook = (
+            "Undercharging can be a way to avoid feeling exposed when asking for more."
+        )
+        result = ScenarioGenerator(
+            StubScenarioProvider([self._valid(hook=hook)])
+        ).generate(
+            account=self.account,
+            concept=self.concept,
+            production_profile=self.profile,
+        )
+        self.assertEqual(result.scenarios[0]["hook"], hook)
     def test_rejects_provider_missing_schema_version(self):
         scenario = self._valid()
         del scenario["schema_version"]
@@ -95,6 +117,28 @@ class ScenarioGeneratorTests(unittest.TestCase):
             ScenarioGenerator(
                 StubScenarioProvider([self._valid(schema_version=1)])
             ).generate(
+                account=self.account,
+                concept=self.concept,
+                production_profile=self.profile,
+            )
+
+    def test_rejects_provider_disabled_visual_generation(self):
+        scenario = self._valid(
+            scenes=[{
+                **self._valid()["scenes"][0],
+                "visual": {
+                    "type": "image",
+                    "generation_required": False,
+                    "prompt_en": "Cinematic vertical portrait.",
+                },
+            }]
+        )
+
+        with self.assertRaisesRegex(
+            DomainValidationError,
+            "generation_required=true",
+        ):
+            ScenarioGenerator(StubScenarioProvider([scenario])).generate(
                 account=self.account,
                 concept=self.concept,
                 production_profile=self.profile,
@@ -243,3 +287,4 @@ class ScenarioGeneratorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -35,7 +35,7 @@ def resolve_visual_asset(job_dir, asset_id):
     physical_path = Path(asset["path"])
 
     if not physical_path.is_absolute():
-        physical_path = Path.cwd() / physical_path
+        physical_path = job_dir / physical_path
 
     physical_path = physical_path.resolve()
     job_root = job_dir.resolve()
@@ -53,6 +53,56 @@ def resolve_visual_asset(job_dir, asset_id):
         )
 
     return physical_path
+
+
+def resolve_visual_asset_for_scene(job_dir, scene):
+    """Resolve the single READY VisualAsset matching a Scene requirement.
+
+    Scene-level asset identity is intentionally not inferred here. Until
+    VisualAsset carries a scene binding, multiple READY assets of the same
+    type are ambiguous and must fail rather than being guessed.
+    """
+    job_dir = Path(job_dir)
+    visual = scene.get("visual", {})
+    asset_type = visual.get("type")
+
+    if not asset_type:
+        raise ValueError("Scene visual requirement has no type")
+
+    assets_dir = job_dir / "media" / "visual"
+    candidates = []
+
+    for asset_path in assets_dir.glob("*.json"):
+        asset = load_json(asset_path)
+
+        if (
+            asset.get("entity") == "VisualAsset"
+            and asset.get("type") == asset_type
+            and asset.get("status") == "ready"
+        ):
+            candidates.append(asset)
+
+    if not candidates:
+        raise FileNotFoundError(
+            f"No ready VisualAsset found for scene={scene.get('scene_id')} "
+            f"type={asset_type}"
+        )
+
+    if len(candidates) > 1:
+        raise ValueError(
+            "Ambiguous VisualAsset resolution for "
+            f"scene={scene.get('scene_id')} type={asset_type}: "
+            f"{[asset.get('asset_id') for asset in candidates]}"
+        )
+
+    asset_id = candidates[0].get("asset_id")
+    if not asset_id:
+        raise ValueError("READY VisualAsset has no asset_id")
+
+    return {
+        "asset_id": asset_id,
+        "asset_path": str(resolve_visual_asset(job_dir, asset_id)),
+    }
 
 
 if __name__ == "__main__":

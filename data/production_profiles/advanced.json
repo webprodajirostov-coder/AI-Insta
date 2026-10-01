@@ -8,8 +8,7 @@
   "visual": {
     "count": 4,
     "count_max": 6,
-    "types": ["image", "video", "ai_video"],
-    "generation_required": true
+    "types": ["image", "video", "ai_video"]
   },
 
   "audio": {
