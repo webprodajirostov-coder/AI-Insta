@@ -122,8 +122,11 @@ class PipelineOrchestrator:
             result = run_visual_stage(self.job_dir)
 
             if result == "waiting":
-                update_stage(self.job_dir, "visual", "waiting")
-                update_job_state(self.job_dir, status="waiting")
+                current_job = load_job(self.job_dir)
+                if current_job["pipeline"]["visual"] != "waiting":
+                    update_stage(self.job_dir, "visual", "waiting")
+                if current_job.get("status") != "waiting":
+                    update_job_state(self.job_dir, status="waiting")
                 print("VISUAL: waiting")
                 print("========================")
                 return False
