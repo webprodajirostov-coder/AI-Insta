@@ -90,9 +90,9 @@ Assembly
 validated final.mp4
 ```
 
-Current regression suite: **155 tests — OK**.
+Current regression suite: **163 tests — OK**.
 
-Real product smoke: **completed on 2026-09-30** with configured external providers, including asynchronous Kling visual generation and resume/poll.
+Real product smoke: **completed on 2026-10-01** with configured external providers, including asynchronous Kling visual generation, resume/poll, Assembly, rendering and output validation. The SIMPLE renderer now executes `fade_in` overlay animation.
 
 ### Planned / not yet current focus
 
