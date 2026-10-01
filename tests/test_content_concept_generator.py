@@ -62,16 +62,21 @@ class ContentConceptGeneratorTests(unittest.TestCase):
             self.idea["production"]["profile"],
         )
 
-    def test_rejects_hook_outside_account_word_count(self):
-        broken = dict(self.base_concept)
-        broken["hook"] = "This hook is intentionally far too long for the account rule."
+    def test_accepts_short_hook(self):
+        short = dict(self.base_concept)
+        short["hook"] = "Fear can quietly shape pricing."
 
-        with self.assertRaisesRegex(DomainValidationError, "requires 10-12 words"):
-            self._generate([broken])
+        result = self._generate([short])
+        self.assertEqual(result.concepts[0]["hook"], short["hook"])
 
-    def test_accepts_hook_inside_account_word_count(self):
-        result = self._generate()
-        self.assertEqual(len(result.concepts[0]["hook"].split()), 10)
+    def test_accepts_longer_hook(self):
+        longer = dict(self.base_concept)
+        longer["hook"] = (
+            "Undercharging can be a way to avoid feeling exposed when asking for more."
+        )
+
+        result = self._generate([longer])
+        self.assertEqual(result.concepts[0]["hook"], longer["hook"])
     def test_rejects_cross_account_idea(self):
         broken = dict(self.idea)
         broken["account_id"] = "other_account"
