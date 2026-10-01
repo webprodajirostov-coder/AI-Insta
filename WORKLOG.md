@@ -1,3 +1,31 @@
+## 2026-10-01 — Checkpoint: Product smoke, SIMPLE overlay animation and flexible hook guidance
+
+### Result
+
+Job `20261001_103125` completed after asynchronous visual generation/resume and produced a validated final MP4: H.264, 1080x1920, 8.0s, AAC.
+
+The SIMPLE renderer now executes Scenario text-overlay animation for `fade_in`; unsupported overlay animation values fail explicitly.
+
+### Hook contract decision
+
+The Account hook `target_word_count` is creative guidance, not a hard domain contract. Providers are instructed to keep hooks concise and clear while preserving the core message. Concrete presentation constraints should be enforced only when required by the production profile/renderer.
+
+### Runtime validation
+
+After synchronizing Replit with `origin/feature/scenario-generation-orchestration`:
+
+`Ran 163 tests in 38.208s`
+
+`OK`
+
+The earlier 157-test run was caused by Replit using an older checkout, not by a regression.
+
+### Next slice
+
+Inspect the generated Job artifacts and final Reel, identify the smallest concrete product-quality gap, and implement only that gap. Keep Research collectors, analytics, learning, STANDARD/ADVANCED profiles and publishing out of scope.
+
+---
+
 ## 2026-09-30 — Checkpoint: First real provider-backed content unit
 
 ### Goal
