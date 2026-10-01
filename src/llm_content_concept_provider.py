@@ -36,7 +36,7 @@ caption, voiceover, visual, audio, scenario, or scenes.
 Preserve the ContentIdea account_id and idea_id.
 Preserve its knowledge_refs and research_refs exactly from the ContentIdea.
 The production profile is inherited from the ContentIdea: copy ContentIdea.production.profile exactly into ContentConcept.production_profile. Do not choose, infer, replace, or optimize the production profile.
-The hook MUST follow the Account content_rules.hooks target_word_count exactly. Do not exceed or fall below the supplied word-count range.
+Use the Account hook guidance as a creative target: make the hook concise, clear, and attention-grabbing while preserving the ContentIdea's core message. Do not force an exact word count.
 The returned production_profile MUST be exactly equal to ContentIdea.production.profile.
 Use only references supplied by the input.
 Do not invent research evidence or present a research observation as established fact."""
