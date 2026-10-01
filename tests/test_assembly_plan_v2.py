@@ -208,7 +208,7 @@ class AssemblyPlanV2Tests(unittest.TestCase):
                 ValueError,
                 "Ambiguous VisualAsset resolution",
             ):
-                build_assembly_plan(job_dir
+                build_assembly_plan(job_dir)
 
     def test_simple_renderer_rejects_visual_path_outside_job(self):
         with tempfile.TemporaryDirectory() as temp_dir:
