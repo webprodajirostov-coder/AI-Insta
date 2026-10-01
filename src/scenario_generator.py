@@ -7,6 +7,7 @@ from typing import Any, Mapping, Protocol, Sequence
 from src.domain_validation import (
     DomainValidationError,
     validate_account,
+    validate_account_hook,
     validate_content_concept,
     validate_production_profile,
     validate_scenario_v2,
@@ -127,6 +128,12 @@ class ScenarioGenerator:
                     f"Scenario {scenario['scenario_id']} uses ProductionProfile "
                     f"{scenario['production_profile']!r}, expected {profile_id!r}"
                 )
+
+            validate_account_hook(
+                account,
+                scenario["hook"],
+                label=f"Scenario {scenario['scenario_id']}",
+            )
 
             validate_scenario_v2(
                 scenario,
