@@ -3,8 +3,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from moviepy import ColorClip
+
 from src.assembly import build_assembly_plan
-from src.assembly_renderer import render_assembly
+from src.assembly_renderer import (
+    apply_overlay_animation,
+    render_assembly,
+)
 from src.domain_validation import DomainValidationError
 from src.production_profile_store import ProductionProfileStore
 
@@ -92,7 +97,6 @@ class AssemblyPlanV2Tests(unittest.TestCase):
         music_asset = {
             "entity": "AudioAsset",
             "asset_id": "music_001",
-            "job_id": "job_001",
             "type": "music",
             "status": "ready",
             "path": str(music_file),
@@ -160,7 +164,7 @@ class AssemblyPlanV2Tests(unittest.TestCase):
 
             with self.assertRaisesRegex(
                 DomainValidationError,
-                "does not match sum\\(Scene.duration_seconds\\)=7",
+                "does not match sum\(Scene.duration_seconds\)=7",
             ):
                 build_assembly_plan(job_dir)
 
@@ -204,7 +208,7 @@ class AssemblyPlanV2Tests(unittest.TestCase):
                 ValueError,
                 "Ambiguous VisualAsset resolution",
             ):
-                build_assembly_plan(job_dir)
+                build_assembly_plan(job_dir
 
     def test_simple_renderer_rejects_visual_path_outside_job(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -268,6 +272,23 @@ class AssemblyPlanV2Tests(unittest.TestCase):
                 "Simple Renderer currently supports exactly one scene",
             ):
                 render_assembly(job_dir)
+
+    def test_simple_renderer_applies_fade_in_overlay(self):
+        clip = ColorClip(size=(100, 100), color=(255, 255, 255), duration=1)
+        faded = apply_overlay_animation(clip, "fade_in")
+        self.assertAlmostEqual(float(faded.get_frame(0)[0, 0, 0]), 0.0, delta=1.0)
+        self.assertAlmostEqual(float(faded.get_frame(0.4)[0, 0, 0]), 255.0, delta=2.0)
+        clip.close()
+        faded.close()
+
+    def test_simple_renderer_rejects_unknown_overlay_animation(self):
+        clip = ColorClip(size=(100, 100), color=(255, 255, 255), duration=1)
+        with self.assertRaisesRegex(
+            ValueError,
+            "Unsupported text overlay animation",
+        ):
+            apply_overlay_animation(clip, "slide_left")
+        clip.close()
 
 
 if __name__ == "__main__":
