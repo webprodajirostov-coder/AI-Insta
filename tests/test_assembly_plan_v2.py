@@ -97,6 +97,7 @@ class AssemblyPlanV2Tests(unittest.TestCase):
         music_asset = {
             "entity": "AudioAsset",
             "asset_id": "music_001",
+            "job_id": "job_001",
             "type": "music",
             "status": "ready",
             "path": str(music_file),
@@ -164,7 +165,7 @@ class AssemblyPlanV2Tests(unittest.TestCase):
 
             with self.assertRaisesRegex(
                 DomainValidationError,
-                "does not match sum\(Scene.duration_seconds\)=7",
+                "does not match sum\\(Scene.duration_seconds\\)=7",
             ):
                 build_assembly_plan(job_dir)
 
