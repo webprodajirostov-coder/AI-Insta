@@ -205,6 +205,53 @@ class VisualLifecycleTests(unittest.TestCase):
         self.assertEqual(asset["status"], "ready")
         self.assertTrue(Path(asset["path"]).is_file())
 
+    def test_still_generating_visual_can_be_resumed_without_failing(self):
+        job_dir = self.make_job()
+
+        class Provider:
+            MODEL = "kling-v3-image"
+
+            def __init__(self):
+                self.submit_calls = 0
+                self.status_calls = 0
+
+            def submit(self, **kwargs):
+                self.submit_calls += 1
+                return {
+                    "request_id": "request_001",
+                    "status_url": "https://example.test/status",
+                    "response_url": "https://example.test/result",
+                }
+
+            def get_status(self, status_url):
+                self.status_calls += 1
+                return {"status": "processing"}
+
+        provider = Provider()
+
+        with patch(
+            "src.visual_generator.ODIRouterImageProvider",
+            return_value=provider,
+        ), patch(
+            "src.visual_poller.ODIRouterImageProvider",
+            return_value=provider,
+        ):
+            first = run_ready_pipeline(job_dir)
+            self.assertFalse(first)
+
+            second = run_ready_pipeline(job_dir)
+            self.assertFalse(second)
+
+        self.assertEqual(provider.submit_calls, 1)
+        self.assertEqual(provider.status_calls, 1)
+
+        job = json.loads(
+            (job_dir / "job.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(job["status"], "waiting")
+        self.assertEqual(job["pipeline"]["visual"], "waiting")
+        self.assertIsNone(job.get("error"))
+
     def test_ready_visual_is_reused_without_provider_call(self):
         job_dir = self.make_job()
 
