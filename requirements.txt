@@ -1,0 +1,5 @@
+# Core runtime dependencies for the current AI-Insta content-creation pipeline.
+# Keep the renderer-compatible MoviePy version pinned.
+requests>=2.31,<3
+python-dotenv>=1,<2
+moviepy==2.1.2
