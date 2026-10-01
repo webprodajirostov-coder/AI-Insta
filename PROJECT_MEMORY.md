@@ -10,11 +10,11 @@ It does **not** replace the detailed architecture/product documents. It tells us
 
 **Branch:** `feature/scenario-generation-orchestration`
 
-**Latest repository checkpoint:** `6f35513e9f68eb066a0145bcc117d88dee67a5de` — `Add valid Research smoke input for product E2E`
+**Latest repository checkpoint:** `da98614280ed7db46d067c9b48d94cf096cf0a2f` — `Test flexible hook length in Scenario`
 
-**Runtime validation:** `155 tests — OK`
+**Runtime validation:** `163 tests — OK`
 
-**Real product smoke:** Job `20260930_145833` completed successfully with configured ODIRouter LLM + Kling visual provider.
+**Real product smoke:** Job `20261001_103125` completed successfully with configured ODIRouter LLM + Kling visual provider after the SIMPLE renderer overlay-animation slice.
 
 The current validated vertical slice is:
 
@@ -58,13 +58,13 @@ Research input should remain source-agnostic. Instagram/competitor collectors ca
 
 ## Next action
 
-Perform an architecture/product checkpoint against the successful real smoke:
+The first real provider-backed content unit and the SIMPLE overlay-animation slice are validated. The next focus is product-quality evaluation of the generated content unit, not another domain layer:
 
-1. verify which contracts are proven by real providers versus only by tests;
-2. inspect the generated Job artifacts and final Reel for product-quality gaps;
-3. reconcile PRODUCT_SPEC / ROADMAP / PROJECT_MAP with the actual implementation and remove stale checkpoint language;
-4. identify the smallest next product bottleneck;
-5. explicitly record what is out of scope for the next slice.
+1. inspect the generated Job artifacts and final Reel for content and presentation gaps;
+2. distinguish quality issues from architectural contract issues;
+3. identify the smallest product change that materially improves the SIMPLE output;
+4. keep Instagram collection, analytics, learning, STANDARD/ADVANCED profiles and new orchestration layers out of scope;
+5. use the runtime sync/preflight check before each Replit validation.
 
 The architectural path is proven. Do not add Instagram scraping/API, analytics, learning, STANDARD/ADVANCED profiles, or another orchestration layer merely because the vertical slice is complete.
 
