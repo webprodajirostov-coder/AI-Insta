@@ -79,19 +79,28 @@ class ScenarioGeneratorTests(unittest.TestCase):
         self.assertEqual(scenario["scenario_id"], "scenario_001")
         self.assertEqual(len(scenario["scenes"]), 1)
 
-    def test_rejects_provider_hook_outside_account_word_count(self):
-        with self.assertRaisesRegex(DomainValidationError, "requires 10-12 words"):
-            ScenarioGenerator(
-                StubScenarioProvider([
-                    self._valid(
-                        hook="Still think you need more sales scripts? Your pricing problem isn't skill, it's social risk."
-                    )
-                ])
-            ).generate(
-                account=self.account,
-                concept=self.concept,
-                production_profile=self.profile,
-            )
+    def test_accepts_short_provider_hook(self):
+        result = ScenarioGenerator(
+            StubScenarioProvider([self._valid(hook="Fear can quietly shape pricing.")])
+        ).generate(
+            account=self.account,
+            concept=self.concept,
+            production_profile=self.profile,
+        )
+        self.assertEqual(result.scenarios[0]["hook"], "Fear can quietly shape pricing.")
+
+    def test_accepts_longer_provider_hook(self):
+        hook = (
+            "Undercharging can be a way to avoid feeling exposed when asking for more."
+        )
+        result = ScenarioGenerator(
+            StubScenarioProvider([self._valid(hook=hook)])
+        ).generate(
+            account=self.account,
+            concept=self.concept,
+            production_profile=self.profile,
+        )
+        self.assertEqual(result.scenarios[0]["hook"], hook)
     def test_rejects_provider_missing_schema_version(self):
         scenario = self._valid()
         del scenario["schema_version"]
