@@ -14,7 +14,7 @@ on:
       model:
         description: "OdiRouter video model"
         required: false
-        default: "kling-v3-i2v"
+        default: "seedance-2-0-fast"
       duration:
         description: "Video duration in seconds"
         required: false
