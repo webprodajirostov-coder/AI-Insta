@@ -6,7 +6,7 @@ on:
       image_path:
         description: "Repository path to the Elena reference image"
         required: true
-        default: "experiments/affiliate_ugc/character/elena.png"
+        default: "experiments/affiliate_ugc/elena.png"
       prompt_path:
         description: "Prompt file"
         required: true
