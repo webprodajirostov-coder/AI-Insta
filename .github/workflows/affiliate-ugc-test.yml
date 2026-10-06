@@ -1,0 +1,50 @@
+name: Affiliate UGC test
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_path:
+        description: "Repository path to the Elena reference image"
+        required: true
+        default: "experiments/affiliate_ugc/character/elena.png"
+      prompt_path:
+        description: "Prompt file"
+        required: true
+        default: "experiments/affiliate_ugc/prompts/01_hook.txt"
+      model:
+        description: "OdiRouter video model"
+        required: false
+        default: "viduq3-pro-img2video"
+      duration:
+        description: "Video duration in seconds"
+        required: false
+        default: "5"
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+
+      - name: Generate video
+        env:
+          ODIROUTER_API_KEY: ${{ secrets.ODIROUTER_API_KEY }}
+          ODIROUTER_VIDEO_MODEL: ${{ inputs.model }}
+        run: |
+          python experiments/affiliate_ugc/generate_video.py             --image "${{ inputs.image_path }}"             --prompt-file "${{ inputs.prompt_path }}"             --output experiments/affiliate_ugc/output/01_hook.mp4             --duration "${{ inputs.duration }}"
+
+      - name: Upload generated video
+        uses: actions/upload-artifact@v4
+        with:
+          name: affiliate-ugc-test
+          path: experiments/affiliate_ugc/output/01_hook.mp4
+          if-no-files-found: error
