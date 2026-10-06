@@ -42,7 +42,7 @@ def submit(image_url: str, prompt: str, model: str, duration: int,
             "duration": duration,
             "sound": False,
         }
-    elif model == "seedance-2-0-fast":
+    elif model in {"seedance-2-0", "seedance-2-0-fast"}:
         payload = {
             "content": [
                 {"type": "text", "text": prompt},
