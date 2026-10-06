@@ -14,7 +14,7 @@ on:
       model:
         description: "OdiRouter video model"
         required: false
-        default: "seedance-2-0-fast"
+        default: "seedance-2-0"
       duration:
         description: "Video duration in seconds"
         required: false
