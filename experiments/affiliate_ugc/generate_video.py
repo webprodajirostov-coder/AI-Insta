@@ -35,13 +35,21 @@ def upload_image(path: Path) -> str:
 
 def submit(image_url: str, prompt: str, model: str, duration: int,
            resolution: str, aspect_ratio: str) -> dict:
-    payload = {
-        "images": [image_url],
-        "prompt": prompt,
-        "duration": duration,
-        "resolution": resolution,
-        "aspect_ratio": aspect_ratio,
-    }
+    if model == "kling-v3-i2v":
+        payload = {
+            "image": image_url,
+            "prompt": prompt,
+            "duration": duration,
+            "sound": False,
+        }
+    else:
+        payload = {
+            "images": [image_url],
+            "prompt": prompt,
+            "duration": duration,
+            "resolution": resolution,
+            "aspect_ratio": aspect_ratio,
+        }
     r = requests.post(
         f"{BASE_URL}/model/v1/queue/{model}",
         headers={**api_headers(), "Content-Type": "application/json"},
