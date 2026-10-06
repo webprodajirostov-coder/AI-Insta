@@ -14,7 +14,7 @@ on:
       model:
         description: "OdiRouter video model"
         required: false
-        default: "seedance-2-0"
+        default: "viduq3-pro-img2video"
       duration:
         description: "Video duration in seconds"
         required: false
