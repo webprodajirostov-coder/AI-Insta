@@ -42,6 +42,20 @@ def submit(image_url: str, prompt: str, model: str, duration: int,
             "duration": duration,
             "sound": False,
         }
+    elif model == "seedance-2-0-fast":
+        payload = {
+            "content": [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image_url},
+                    "role": "first_frame",
+                },
+            ],
+            "resolution": resolution,
+            "ratio": aspect_ratio,
+            "duration": duration,
+        }
     else:
         payload = {
             "images": [image_url],
