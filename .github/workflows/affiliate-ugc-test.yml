@@ -14,7 +14,7 @@ on:
       model:
         description: "OdiRouter video model"
         required: false
-        default: "vidu2.0-img2video"
+        default: "kling-v3-i2v"
       duration:
         description: "Video duration in seconds"
         required: false
