@@ -129,6 +129,7 @@ def download(url: str, output: Path) -> None:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", required=True, type=Path)
+    parser.add_argument("--image-url", default="", help="Optional public image URL for provider diagnostics")
     parser.add_argument("--prompt-file", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--model", default=os.getenv("ODIROUTER_VIDEO_MODEL", DEFAULT_MODEL))
@@ -148,7 +149,10 @@ def main():
 
     print("MODEL:", args.model)
     print("IMAGE:", args.image)
-    if args.model in SEEDANCE_MODELS:
+    if args.image_url:
+        image_url = args.image_url
+        print("IMAGE INPUT: public URL diagnostic")
+    elif args.model in SEEDANCE_MODELS:
         image_url = image_data_url(args.image)
         print("IMAGE INPUT: inline Base64 data URL (Seedance-compatible)")
     else:
