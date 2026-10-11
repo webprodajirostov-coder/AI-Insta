@@ -120,7 +120,7 @@ def main():
     parser.add_argument("--prompt-file", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--model", default=os.getenv("ODIROUTER_VIDEO_MODEL", DEFAULT_MODEL))
-    parser.add_argument("--duration", type=int, default=3)
+    parser.add_argument("--duration", type=int, default=4)
     parser.add_argument("--resolution", default="720p")
     parser.add_argument("--aspect-ratio", default="9:16")
     parser.add_argument("--poll-seconds", type=int, default=5)
