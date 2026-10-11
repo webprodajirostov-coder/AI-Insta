@@ -6,7 +6,7 @@ on:
       image_path:
         description: "Repository path to the tomato paste jar reference image"
         required: true
-        default: "experiments/affiliate_ugc/tomato_paste_jar.png"
+        default: "experiments/affiliate_ugc/Домашняя томатная паста и улыбка.png"
       prompt_path:
         description: "Prompt file"
         required: true
@@ -18,7 +18,7 @@ on:
       duration:
         description: "Video duration in seconds"
         required: false
-        default: "3"
+        default: "4"
 
 jobs:
   generate:
@@ -52,5 +52,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tomato-paste-ugc-test
-          path: experiments/affiliate_ugc/output/01_hook.mp4
+          path: experiments/affiliate_ugc/output/tomato_paste_jar.mp4
           if-no-files-found: error
