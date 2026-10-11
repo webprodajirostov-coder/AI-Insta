@@ -46,7 +46,7 @@ def upload_image(path: Path) -> str:
 
 
 def submit(image_url: str, prompt: str, model: str, duration: int,
-           resolution: str, aspect_ratio: str) -> dict:
+           resolution: str, aspect_ratio: str, text_only: bool = False) -> dict:
     if model == "kling-v3-i2v":
         payload = {
             "image": image_url,
@@ -55,15 +55,15 @@ def submit(image_url: str, prompt: str, model: str, duration: int,
             "sound": False,
         }
     elif model in SEEDANCE_MODELS:
+        content = [{"type": "text", "text": prompt}]
+        if not text_only:
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": image_url},
+                "role": "first_frame",
+            })
         payload = {
-            "content": [
-                {"type": "text", "text": prompt},
-                {
-                    "type": "image_url",
-                    "image_url": {"url": image_url},
-                    "role": "first_frame",
-                },
-            ],
+            "content": content,
             "resolution": resolution,
             "ratio": aspect_ratio,
             "duration": duration,
@@ -130,6 +130,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", required=True, type=Path)
     parser.add_argument("--image-url", default="", help="Optional public image URL for provider diagnostics")
+    parser.add_argument("--text-only", action="store_true", help="Run a Seedance text-to-video diagnostic without an image")
     parser.add_argument("--prompt-file", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--model", default=os.getenv("ODIROUTER_VIDEO_MODEL", DEFAULT_MODEL))
@@ -149,7 +150,10 @@ def main():
 
     print("MODEL:", args.model)
     print("IMAGE:", args.image)
-    if args.image_url:
+    if args.text_only:
+        image_url = ""
+        print("IMAGE INPUT: text-only diagnostic")
+    elif args.image_url:
         image_url = args.image_url
         print("IMAGE INPUT: public URL diagnostic")
     elif args.model in SEEDANCE_MODELS:
@@ -167,6 +171,7 @@ def main():
         duration=args.duration,
         resolution=args.resolution,
         aspect_ratio=args.aspect_ratio,
+        text_only=args.text_only,
     )
     print("REQUEST ID:", job["request_id"])
 
