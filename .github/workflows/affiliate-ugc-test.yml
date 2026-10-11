@@ -7,6 +7,11 @@ on:
         description: "Repository path to the tomato paste jar reference image"
         required: true
         default: "experiments/affiliate_ugc/Домашняя томатная паста и улыбка.png"
+      text_only:
+        description: "Diagnostic only: generate from prompt without an image"
+        required: false
+        type: boolean
+        default: false
       image_url:
         description: "Public URL of the tomato-paste reference image"
         required: false
@@ -51,7 +56,8 @@ jobs:
             --prompt-file "${{ inputs.prompt_path }}" \
             --output experiments/affiliate_ugc/output/tomato_paste_jar.mp4 \
             --duration "${{ inputs.duration }}" \
-            ${{ inputs.image_url != '' && format('--image-url "{0}"', inputs.image_url) || '' }}
+            ${{ inputs.image_url != '' && format('--image-url "{0}"', inputs.image_url) || '' }} \
+            ${{ inputs.text_only && '--text-only' || '' }}
 
       - name: Upload generated video
         uses: actions/upload-artifact@v4
