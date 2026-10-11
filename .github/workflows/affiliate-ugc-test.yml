@@ -4,21 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       image_path:
-        description: "Repository path to the Elena reference image"
+        description: "Repository path to the tomato paste jar reference image"
         required: true
-        default: "experiments/affiliate_ugc/elena2.png"
+        default: "experiments/affiliate_ugc/tomato_paste_jar.png"
       prompt_path:
         description: "Prompt file"
         required: true
-        default: "experiments/affiliate_ugc/prompts/01_hook.txt"
+        default: "experiments/affiliate_ugc/prompts/01_tomato_paste_jar.txt"
       model:
         description: "OdiRouter video model"
         required: false
-        default: "viduq3-pro-img2video"
+        default: "seedance-2-0-fast"
       duration:
         description: "Video duration in seconds"
         required: false
-        default: "5"
+        default: "3"
 
 jobs:
   generate:
@@ -45,12 +45,12 @@ jobs:
           python experiments/affiliate_ugc/generate_video.py \
             --image "${{ inputs.image_path }}" \
             --prompt-file "${{ inputs.prompt_path }}" \
-            --output experiments/affiliate_ugc/output/01_hook.mp4 \
+            --output experiments/affiliate_ugc/output/tomato_paste_jar.mp4 \
             --duration "${{ inputs.duration }}"
 
       - name: Upload generated video
         uses: actions/upload-artifact@v4
         with:
-          name: affiliate-ugc-test
+          name: tomato-paste-ugc-test
           path: experiments/affiliate_ugc/output/01_hook.mp4
           if-no-files-found: error
