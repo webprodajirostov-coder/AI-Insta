@@ -61,7 +61,7 @@ def submit(image_url: str, prompt: str, model: str, duration: int,
                 {
                     "type": "image_url",
                     "image_url": {"url": image_url},
-                    "role": "reference_image",
+                    "role": "first_frame",
                 },
             ],
             "resolution": resolution,
