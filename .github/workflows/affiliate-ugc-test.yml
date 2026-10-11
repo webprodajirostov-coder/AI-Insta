@@ -7,6 +7,10 @@ on:
         description: "Repository path to the tomato paste jar reference image"
         required: true
         default: "experiments/affiliate_ugc/Домашняя томатная паста и улыбка.png"
+      image_url:
+        description: "Optional public image URL for diagnosing Seedance input (leave blank for normal run)"
+        required: false
+        default: ""
       prompt_path:
         description: "Prompt file"
         required: true
@@ -46,7 +50,8 @@ jobs:
             --image "${{ inputs.image_path }}" \
             --prompt-file "${{ inputs.prompt_path }}" \
             --output experiments/affiliate_ugc/output/tomato_paste_jar.mp4 \
-            --duration "${{ inputs.duration }}"
+            --duration "${{ inputs.duration }}" \
+            ${{ inputs.image_url != '' && format('--image-url "{0}"', inputs.image_url) || '' }}
 
       - name: Upload generated video
         uses: actions/upload-artifact@v4
