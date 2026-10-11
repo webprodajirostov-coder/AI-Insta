@@ -1,4 +1,6 @@
 import argparse
+import base64
+import mimetypes
 import os
 import time
 from pathlib import Path
@@ -8,6 +10,7 @@ from dotenv import load_dotenv
 
 BASE_URL = "https://api.odirouter.ai"
 DEFAULT_MODEL = "seedance-2-0-fast"
+SEEDANCE_MODELS = {"seedance-2-0", "seedance-2-0-fast"}
 
 
 def api_headers():
@@ -15,6 +18,15 @@ def api_headers():
     if not key:
         raise RuntimeError("ODIROUTER_API_KEY is not configured")
     return {"Authorization": f"Bearer {key}"}
+
+
+def image_data_url(path: Path) -> str:
+    """Embed a local image directly; Seedance accepts data:image/...;base64 URLs."""
+    mime_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    if not mime_type.startswith("image/"):
+        raise ValueError(f"Unsupported image file type: {path.name}")
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
 
 
 def upload_image(path: Path) -> str:
@@ -42,7 +54,7 @@ def submit(image_url: str, prompt: str, model: str, duration: int,
             "duration": duration,
             "sound": False,
         }
-    elif model in {"seedance-2-0", "seedance-2-0-fast"}:
+    elif model in SEEDANCE_MODELS:
         payload = {
             "content": [
                 {"type": "text", "text": prompt},
@@ -136,8 +148,12 @@ def main():
 
     print("MODEL:", args.model)
     print("IMAGE:", args.image)
-    print("Uploading reference image...")
-    image_url = upload_image(args.image)
+    if args.model in SEEDANCE_MODELS:
+        image_url = image_data_url(args.image)
+        print("IMAGE INPUT: inline Base64 data URL (Seedance-compatible)")
+    else:
+        print("Uploading reference image...")
+        image_url = upload_image(args.image)
 
     print("Submitting video...")
     job = submit(
